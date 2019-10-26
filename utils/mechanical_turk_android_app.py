@@ -1,6 +1,7 @@
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
 from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -26,7 +27,7 @@ class MechanicalTurkApp(App):
         main_frame = BoxLayout()
         self.image_frame = BoxLayout()
         possible_labels_frame = GridLayout()
-        chosen_labels_frame = BoxLayout()
+        #chosen_labels_frame = BoxLayout()
         submission_frame = GridLayout()
 
         # Define buttons for submission frame
@@ -45,6 +46,10 @@ class MechanicalTurkApp(App):
         Activated when user presses submit button.
         Cycles to next image in dataset
         '''
+        # TODO: tie button states to the completion of this
+        #       function so that pressed buttons are reset
+        #       to their unpressed state
+
         # clear previous image from image frame
         self.image_frame.config(image='')
 
@@ -55,9 +60,8 @@ class MechanicalTurkApp(App):
 
 
         # apply loaded image to image frame
-        self.image_frame.add_widget(curr_img)
+        self.image_frame.add_widget(self.curr_img)
 
-        return
 
     def load_previous_image(self):
         '''
@@ -65,6 +69,10 @@ class MechanicalTurkApp(App):
         Goes back to previous image and allows user
         to change labels they assigned to it
         '''
+        # TODO: tie button states to the completion of this
+        #       function so that pressed buttons are reset
+        #       to their unpressed state
+
         # clear current image from frame
         self.image_frame.config(image='')
 
@@ -99,9 +107,15 @@ class ImageWindow(Window):
 
 
 
+# TODO: Redefine this class as a draggable lable that can be
+#       dragged onto the image
+class TagLabels(ToggleButton):
 
-class TagLabels(DragBehavior, Label):
-    pass
+    def on_press(self):
+        pass
+
+
+
 
 
 if __name__ == '__main__':
