@@ -17,6 +17,7 @@ def retrieve_reddit_data_json(subreddit_url,
 
     # Max number of items to return per reddit input file
     max_out_records = 5
+
     # Minimum number of items to return
     min_out_records = 5
 
@@ -118,27 +119,46 @@ if __name__ == '__main__':
                         help='Subreddit to perform scraping operation on'
                        )
 
+    parser.add_argument('--num_images_to_scrape', type=int,
+                        default=5,
+                        help="Number of images to scrape from chosen subreddit"
+                        )
+
     #parser.add_argument('--client_id', type=
 
     flags, _ = parser.parse_known_args()
 
     subreddit_url = reddit_url + '/r/' + flags.subreddit
 
-    json_data_list, after_token = retrieve_reddit_data_json(subreddit_url)
+    img_counter = 0
+
+    json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
+                                                            limit=flags.num_images_to_scrape)
+
 
     for post_data in json_data_list:
+
+        if img_counter == flags.num_images_to_scrape:
+            break
+
         scrape_images(post_data, flags.dataset_path)
+        img_counter += 1
 
     while after_token:
+
+        if img_counter == flags.num_images_to_scrape:
+            break
 
         print("after_token: ", after_token)
 
         json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
+                                                                count=flags.num_images_to_scrape,
                                                                 after_token=after_token)
         scrape_images(post_data, flags.dataset_path)
 
         for post_data in json_data_list:
             scrape_images(post_data, flags.dataset_path)
+            img_counter += 1
 
 
 
