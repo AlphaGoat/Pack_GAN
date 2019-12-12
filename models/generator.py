@@ -88,6 +88,10 @@ class Generator(object):
         # Shape: (batch_size, 16, 16, 64)
         residual_input = re_out_fc1 = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
 
+        ####################################################
+        ##################  RESIDUAL LAYERS ################
+        ####################################################
+
         # Initialize 16 Residual blocks
         for i in range(1, 17):
             with tf.name_scope('residual_block{}'.format(i)):
@@ -101,12 +105,12 @@ class Generator(object):
                                                                                         stddev=0.02)
                                             )
                 # Initializing bias parameters for first conv layer
-                bias1_res = WeightVariable(shape=(64,),
-                                           name='bias1_resblock{}'.format(i),
-                                           model_scope=self.model_scope,
-                                           initializer=tf.initializer.TruncatedNormal(mean=0.02,
-                                                                                      stddev=0.02),
-                                           )
+                bias1_res = BiasVariable(shape=(64,),
+                                         name='bias1_resblock{}'.format(i),
+                                         model_scope=self.model_scope,
+                                         initializer=tf.initializer.TruncatedNormal(mean=0.02,
+                                                                                    stddev=0.02),
+                                         )
 
                 # output shape: (batch_size, 16, 16, 64)
                 feature_map1_res = tf.nn.conv2d(residual_input,
@@ -130,12 +134,12 @@ class Generator(object):
                                              initializer=tf.initializer.TruncatedNormal(mean=0.02,
                                                                                         stddev=0.02)
                                              )
-                bias2_res = WeightVariable(shape=(64,),
-                                           name='bias2_resblock{}'.format(i),
-                                           model_scope=self.model_scope,
-                                           initializer=tf.initializer.TruncatedNormal(mean=0.02,
-                                                                                      stddev=0.02)
-                                           )
+                bias2_res = BiasVariable(shape=(64,),
+                                         name='bias2_resblock{}'.format(i),
+                                         model_scope=self.model_scope,
+                                         initializer=tf.initializer.TruncatedNormal(mean=0.02,
+                                                                                    stddev=0.02)
+                                         )
                 # output shape: (batch_size, 16, 16, 64)
                 feature_map2_res = tf.nn.conv2d(act_feature_map_1,
                                                 kernel2_res,
@@ -174,6 +178,10 @@ class Generator(object):
             # Shape: (batch_size, 16, 16, 64)
             residual_output = tf.add(act_residual_block_output, re_out_fc1)
 
+        ############################################################################
+        ######################### END RESIDUAL LAYERS ##############################
+        ############################################################################
+
         # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
         #           x and y dimension and randomly shuffles pixels in those dimensions
         for i in range(1, 4):
@@ -186,12 +194,12 @@ class Generator(object):
                                                 initializer=tf.initializer.TruncatedNormal(mean=0.02,
                                                                                            stddev=0.02)
                                                 )
-                upscale_bias = WeightVariable(shape=(256,),
-                                              name='bias_PixelShuffle{}'.format(i),
-                                              model_scope=self.model_scope,
-                                              initializer=tf.initializer.TruncatedNormal(mean=0.02,
-                                                                                         stddev=0.02)
-                                              )
+                upscale_bias = BiasVariable(shape=(256,),
+                                            name='bias_PixelShuffle{}'.format(i),
+                                            model_scope=self.model_scope,
+                                            initializer=tf.initializer.TruncatedNormal(mean=0.02,
+                                                                                       stddev=0.02)
+                                            )
 
                 # Output shape: (batch_size, 16, 16, 256)
                 upscale_feature_map = tf.nn.conv2d(residual_output,
@@ -209,14 +217,59 @@ class Generator(object):
 #                # 2-D conv layer with filter 3x3
 #                kernel = WeightVariable(shape=[3, 3,
 
-    def pixel_shuffling(self, x):
+    def pixel_shuffle_x2_layer(self, input_fm):
         """
-        Applies pixel shuffling to upsampled feature map
+        Applies pixel shuffling to upsampled feature map.
+        For an input of x256 channels, new feature maps will be composed using the
+        next x4 channels in iteration.
 
-        :param x: input tensor of shape -- (batch_size, fm_x, fm_y, 256)
+        :param input_fm: input tensor of shape -- (batch_size, fm_x, fm_y, 256)
 
         :return out: output tensor of shape -- (batch_size, 2 * fm_x, 2 * fm_y, 64)
         """
+
+
+        def apply_pix_shuffling_to_batch(batch):
+
+            # Compose a shuffled pixel map with every 4xgroup of input feature
+            # maps by iterating over the channel dim in intervals of 4:
+            i = tf.constant(0)
+            cond = lambda i: tf.less(i, 64)
+
+            def gather_shuffled_pixels():
+
+                # Compose indices that will be needed to perform pixel shuffling operation
+                x_dim, y_dim, channel_dim = tf.meshgrid(tf.range(tf.shape(input_fm)[0]),
+                                                        tf.range(tf.shape(input_fm)[1]),
+                                                        tf.range(4*i, 4*(i+1))
+                                                        )
+
+                coords = tf.stack([x_dim, y_dim, channel_dim], axis=-1)
+
+                # Gather the pixels from a 4x group of feature maps
+                # shape: (2 * fm_x, 2* fm_y, 1)
+                upsampled_shuffled_feature_map = tf.gather_nd(batch, coords)
+
+                # update iterator
+                i = tf.add(i, 1)
+
+                return upsampled_shuffled_feature_map
+
+            # Perform pixel shuffling operation
+            # input shape: (fm_x, fm_y, 256)
+            # output shape: (2 * fm_x, 2 * fm_y, 64)
+            pixel_shuffled_batch = tf.while_loop(cond, gather_shuffled_pixels(batch), i)
+
+            return pixel_shuffled_batch
+
+        # Maps pixel shuffling operation to a single batch.
+        # Input shape: (batch_size, fm_x, fm_y, 256)
+        # Output shape: (batch_size, 2 * fm_x, 2 * fm_y, 64)
+        pix_shuffled_feature_maps = tf.map_fn(apply_pix_shuffling_to_batch, input_fm)
+
+        return pix_shuffled_feature_maps
+
+
 
 
 
