@@ -39,8 +39,6 @@ class Generator(object):
         #TODO: Conv Block
         #TODO: Batch Normalization Layer
         #TODO: Elementwise Sum layer
-
-    def sub_pixel_cnn(self):
         pass
 
     def forward_pass(self, x):
@@ -176,7 +174,7 @@ class Generator(object):
             # Final element-wise sum, with original res block input (i.e., the output of the
             # first fully-connected layer
             # Shape: (batch_size, 16, 16, 64)
-            residual_output = tf.add(act_residual_block_output, re_out_fc1)
+            fm_intermediate = tf.add(act_residual_block_output, re_out_fc1)
 
         ############################################################################
         ######################### END RESIDUAL LAYERS ##############################
@@ -202,20 +200,51 @@ class Generator(object):
                                             )
 
                 # Output shape: (batch_size, 16, 16, 256)
-                upscale_feature_map = tf.nn.conv2d(residual_output,
-                                                   kernel_subpix_1,
+                upscale_feature_map = tf.nn.conv2d(fm_intermediate,
+                                                   upscale_kernel,
                                                    strides=[1, 1, 1, 1],
                                                    padding='SAME'
                                                    )
-        # Pixel shuffling operation
-        # Output shape: (batch_Size, 16, 16,
 
+                # Perform pixel shuffling operation
+                pix_shuffled_fm = self.pixel_shuffle_x2_layer(upscale_feature_map)
 
-#        for i in range(1, 4):
-#            with tf.name_scope('upsampling_sub-pixel_convolution{}'.format(i)):
-#
-#                # 2-D conv layer with filter 3x3
-#                kernel = WeightVariable(shape=[3, 3,
+                # batch normalization and final activation
+                bn_pix_shuffled_fm = tf.nn.batch_normalization(pix_shuffled_fm)
+                fm_intermediate = tf.nn.relu(bn_pix_shuffled_fm)
+
+        # Shape of last intermediate feature map output by the upsampling sub-pixel
+        # convolution layers
+        # (batch_size, 128, 128, 64)
+
+        # Final convolution layer
+        with tf.name_scope('final_convolution'):
+
+            final_conv_kernel = WeightVariable(shape=[9, 9, 64, 3],
+                                               name='Filter_final',
+                                               model_scope=self.model_scope,
+                                               initializer=tf.initializer.TruncatedNormal(mean=0.02,
+                                                                                          stddev=0.02)
+                                               )
+            final_conv_bias = BiasVariable(shape=(3,),
+                                           name='bias_final',
+                                           model_scope=self.model_scope,
+                                           initializer=tf.initializer.TruncatedNormal(mean=0.02,
+                                                                                      stddev=0.02)
+                                           )
+
+            final_conv_fm = tf.nn.conv2d(fm_intermediate,
+                                         final_conv_kernel,
+                                         strides=[1, 1, 1, 1],
+                                         padding='SAME'
+                                         )
+
+            bias_final_conv_fm = tf.bias_add(final_conv_fm, final_conv_bias)
+
+            # Shape: (batch_size, 128, 128, 3)
+            output = tf.nn.sigmoid(final_conv_fm)
+
+        return output
 
     def pixel_shuffle_x2_layer(self, input_fm):
         """
