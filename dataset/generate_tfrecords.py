@@ -4,7 +4,6 @@ test sets and turn each set into a respective tfrecord
 """
 
 import tensorflow as tf
-import PIL
 import sqlite3
 import argparse
 import random
@@ -32,56 +31,93 @@ def pull_data_from_sqlite_database(flags):
     num_images = cursor.fetchone()[0]
     print("There are {0} images in the {1} dataset".format(num_images, flags.subreddit))
 
-    # pull image data
+    # Get image ids
     cursor.execute('''
-                   SELECT image_id, file_name, image_height, image_width FROM {}_metadata
+                   SELECT image_id FROM {}_metadata
                    '''.format(flags.subreddit))
 
-    all_rows = cursor.fetch_all()
+    image_ids = cursor.fetch_all()
+
+    # Determine data partition
+    train_ids, valid_ids, test_ids = partition_data(image_ids)
+
+    # pull train image data
+    cursor.execute('''
+            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            WHERE ID IN {1}'''.format(flags.subreddit, train_ids))
+
+    train_rows = cursor.fetch_all()
+
+    # repeat with validation data
+    cursor.execute('''
+            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            WHERE ID IN {1}'''.format(flags.subreddit, valid_ids))
+
+    valid_rows = cursor.fetch_all()
+
+    # and test data
+    cursor.execute('''
+            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            WHERE ID IN {1}'''.format(flags.subreddit, test_ids))
+
+    test_rows = cursor.fetch_all()
 
     # compile data into dictionaries so that it is easier to extract info
     # we need to go into tfrecords later on
-    image_data = []
-    for index, row in enumerate(all_rows):
-        image_id = row[0]
-        file_name = row[1]
 
-        # determine what type of image format the image is encoded as
-        if file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
-            file_format = 'jpeg'
-        else:
-            file_format = 'png'
+    train_data = []
+    valid_data = []
+    test_data = []
+    for i in range(3):
 
-        file_path = os.path.join(db_path, file_name)
-        image_height = row[2]
-        image_width = row[3]
+        if i == 0: all_rows = train_rows
+        elif i == 1: all_rows == valid_rows
+        else: all_rows == test_rows
 
-        # Retrieve tags for image
-        cursor.execute('''SELECT * FROM image_tags WHERE image_id=?''', (image_id))
-        tags = cursor.fetchone()
+        for index, row in enumerate(all_rows):
+            image_id = row[0]
+            file_name = row[1]
 
-        # Initialize data dictionary
-        image_data = {
-            'file_name': file_name,
-            'format': file_format,
-            'image_id': image_id,
-            'height': image_height,
-            'width': image_width,
-            'tags': tags,
-                    }
+            # determine what type of image format the image is encoded as
+            if file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
+                file_format = 'jpeg'
+            else:
+                file_format = 'png'
 
-        image_data.append(image_data)
+            #file_path = os.path.join(db_path, file_name)
+            image_height = row[2]
+            image_width = row[3]
 
-        if index % 100 == 0:
-            print("Reading images: %d/%d" % (index, num_images))
+            # Retrieve tags for image
+            cursor.execute('''SELECT * FROM image_tags WHERE image_id=?''', (image_id))
+            tags = cursor.fetchone()
 
-    # Close the sqlite database
-    metadata_db.close()
+            # Initialize data dictionary
+            image_data = {
+                'file_name': file_name,
+                'format': file_format,
+                'image_id': image_id,
+                'height': image_height,
+                'width': image_width,
+                'tags': tags,
+                        }
 
-    return image_data
+            if i == 0:
+                train_data.append(image_data)
+            elif i == 1:
+                valid_data.append(image_data)
+            else:
+                test_data.append(image_data)
 
+            if index % 100 == 0:
+                print("Reading images: %d/%d" % (index, num_images))
 
-def partition_data(image_data, flags):
+        # Close the sqlite database
+        metadata_db.close()
+
+        return image_data
+
+def partition_data(image_indices, flags):
     """
     Partitions data into training, validation, and testing sets
     randomly or according to some preselected parameters that
@@ -89,28 +125,29 @@ def partition_data(image_data, flags):
     """
     # Perform random shuffle on data
     if flags.random_shuffle:
-        image_data = random.shuffle(image_data)
+        image_indices = random.shuffle(image_indices)
 
     # Divy into train, valid, and test sets
-    train_data = image_data[:flags.num_train]
+    train_indices = tuple(image_indices[:flags.num_train])
 
     # If there are not a sufficient number of examples left to
     # fully compose valid and test sets as specified by user
     # in flag args, just divide remaining number of examples
     # in two
-    num_images_remaining = len(image_data) - flags.num_train
+    num_images_remaining = len(image_indices) - flags.num_train
     if (flags.num_valid + flags.num_test) > num_images_remaining:
         num_valid = num_images_remaining // 2
-        valid_data = image_data[flags.num_train:(flags.num_train + num_valid)]
-        test_data = image_data[(flags.num_train + num_valid):]
+        valid_indices = tuple(image_indices[flags.num_train:(flags.num_train + num_valid)])
+        test_indices = tuple(image_indices[(flags.num_train + num_valid):])
 
-    # If there are enough data examples left to fully compose valid and
+    # If there are enough indices examples left to fully compose valid and
     # test sets...well...compose them
     else:
-        valid_data = image_data[flags.num_train:(flags.num_train + flags.num_valid)]
-        test_data = image_data[(flags.num_train + flags.num_valid):(flags.num_train + flags.num_valid + flags.num_test)]
+        valid_indices = tuple(image_indices[flags.num_train:(flags.num_train + flags.num_valid)])
+        test_indices = tuple(image_indices[(flags.num_train + flags.num_valid):
+                                     (flags.num_train + flags.num_valid + flags.num_test)])
 
-    return train_data, valid_data, test_data
+    return train_indices, valid_indices, test_indices
 
 
 def convert_to_tfrecords(data_dict, flags):
@@ -131,7 +168,7 @@ def convert_to_tfrecords(data_dict, flags):
         pixel_data = tf.image.decode_png(file_path)
 
     return tf.train.Example(features=tf.train.Features(feature={
-        'image/encoded': _bytes_feature(pixel_data),
+        'image/raw': _bytes_feature(pixel_data),
         'image/format': _bytes_feature(data_dict['format'].encode('utf-8')),
         'image/filename': _bytes_feature(data_dict['file_name']),
         'image/id': _int64_feature(data_dict['image_id']),
@@ -172,9 +209,20 @@ if __name__ == '__main__':
                         help="Number of data examples to encode in train tfrecord"
                         )
 
+
+    parser.add_argument('--name_train_tfrecord', type=str,
+                        default=None,
+                        help="Name to use when generating training tfrecord"
+                        )
+
     parser.add_argument('--num_valid', type=int,
                         default=10000,
                         help="Number of data examples to encode in valid tfrecord"
+                        )
+
+    parser.add_argument('--name_valid_tfrecord', type=str,
+                        default=None,
+                        help="Name to use when generating validation tfrecord"
                         )
 
     parser.add_argument('--num_test', type=int,
@@ -182,54 +230,101 @@ if __name__ == '__main__':
                         help="Number of data examples to encode in test tfrecord"
                         )
 
+    parser.add_argument('--name_test_tfrecord', type=str,
+                        default=None,
+                        help="Name to use when generating test tfrecord"
+                        )
+
+    parser.add_argument('--generate_single_example', action='store_true',
+                        help="Option to generate a tfrecord of a single image for testing purposes"
+                        )
+
     flags = parser.parse_args()
 
-    # Gather data from sqlite server
-    image_data = pull_data_from_sqlite_database(flags)
+    if flags.generate_single_example:
 
-    # Divy data into train, valid, and test sets
-    train_data, valid_data, test_data = partition_data(image_data, flags)
+        # Use test image in THE_PACK data folder
+        data_dict = {
+            'format': 'jpeg',
+            'file_name': 'n22b75kalq241.jpg',
+            'image_id': 0,
+            'height': 720,
+            'width': 801,
+            'tags': [0, 37],
+        }
 
-    # Get the path to save tfrecords (default is just to place it in the directory
-    # where we saved images:
-    tfrecord_save_path = os.path.join(flags.datapath, flags.subreddit)
-    current_date = datetime.date.today().strftime("%d%m%y")
+        flags.datapath = "/home/alphagoat/Projects/Pack_GAN/data/"
+        flags.subreddit = "THE_PACK"
 
-    train_tfrecord_path = os.path.join(tfrecord_save_path,
-                     '{0}_train{1}.tfrecords'.format(flags.subreddit, current_date))
-
-    valid_tfrecord_path = os.path.join(tfrecord_save_path,
-                     '{0}_valid{1}.tfrecords'.format(flags.subreddit, current_date))
-
-    test_tfrecord_path = os.path.join(tfrecord_save_path,
-                     '{0}_test{1}.tfrecords'.format(flags.subreddit, current_date))
-
-    # Convert data into tfrecords
-    # first: training set
-    with tf.python_io.TFRecordWriter(train_tfrecord_path) as tfrecord_writer:
-        for index, image_data in enumerate(train_data):
-            if index % 100 == 0:
-                print("Converting images: %d/%d" % (index, flags.num_train))
-
-            example = convert_to_tfrecords(image_data, flags)
+        save_path = os.join.path(flags.datapath, "single_example.tfrecords")
+        with tf.python_io.TFRecordWriter(save_path) as tfrecord_writer:
+            example = convert_to_tfrecords(data_dict, flags)
             tfrecord_writer.write(example.SerializeToString())
 
-    # Now the validation set
-    with tf.python_io.TFRecordWriter(valid_tfrecord_path) as tfrecord_writer:
-        num_valid = len(valid_data)
-        for index, image_data in enumerate(valid_data):
-            if index % 100 == 0:
-                print("Converting images: %d/%d" % (index, num_valid))
+    else:
 
-            example = convert_to_tfrecords(image_data, flags)
-            tfrecord_writer.write(example.SerializeToString())
+        # Gather data from sqlite server
+        image_data = pull_data_from_sqlite_database(flags)
 
-    # Finally, the test set
-    with tf.python_io.TFRecordWriter(test_tfrecord_path) as tfrecord_writer:
-        num_test = len(test_data)
-        for index, image_data in enumerate(test_data):
-            if index % 100 == 0:
-                print("Converting images: %d/%d" % (index, num_test))
+        # Divy data into train, valid, and test sets
+        train_data, valid_data, test_data = partition_data(image_data, flags)
 
-            example = convert_to_tfrecords(image_data, flags)
-            tfrecord_writer.write(example.SerializeToString())
+        # Get the path to save tfrecords (default is just to place it in the directory
+        # where we saved images:
+        tfrecord_save_path = os.path.join(flags.datapath, flags.subreddit)
+        current_date = datetime.date.today().strftime("%d%m%y")
+
+        # Determine the naming convention of the tfrecords
+        # Training tfrecord
+        if flags.name_train_tfrecord:
+            train_tfrecord_path = os.path.join(tfrecord_save_path, flags.name_train_tfrecord)
+
+        else:
+            train_tfrecord_path = os.path.join(tfrecord_save_path,
+                             '{0}_train{1}.tfrecords'.format(flags.subreddit, current_date))
+
+        # Validation tfrecord
+        if flags.name_valid_tfrecord:
+            valid_tfrecord_path = os.path.join(tfrecord_save_path, flags.name_valid_tfrecord)
+
+        else:
+            valid_tfrecord_path = os.path.join(tfrecord_save_path,
+                             '{0}_valid{1}.tfrecords'.format(flags.subreddit, current_date))
+
+        # Testing tfrecord
+        if flags.name_test_tfrecord:
+            test_tfrecord_path = os.path.join(tfrecord_save_path, flags.name_test_tfrecord)
+
+        else:
+            test_tfrecord_path = os.path.join(tfrecord_save_path,
+                             '{0}_test{1}.tfrecords'.format(flags.subreddit, current_date))
+
+        # Convert data into tfrecords
+        # first: training set
+        with tf.python_io.TFRecordWriter(train_tfrecord_path) as tfrecord_writer:
+            for index, image_data in enumerate(train_data):
+                if index % 100 == 0:
+                    print("Converting images: %d/%d" % (index, flags.num_train))
+
+                example = convert_to_tfrecords(image_data, flags)
+                tfrecord_writer.write(example.SerializeToString())
+
+        # Now the validation set
+        with tf.python_io.TFRecordWriter(valid_tfrecord_path) as tfrecord_writer:
+            num_valid = len(valid_data)
+            for index, image_data in enumerate(valid_data):
+                if index % 100 == 0:
+                    print("Converting images: %d/%d" % (index, num_valid))
+
+                example = convert_to_tfrecords(image_data, flags)
+                tfrecord_writer.write(example.SerializeToString())
+
+        # Finally, the test set
+        with tf.python_io.TFRecordWriter(test_tfrecord_path) as tfrecord_writer:
+            num_test = len(test_data)
+            for index, image_data in enumerate(test_data):
+                if index % 100 == 0:
+                    print("Converting images: %d/%d" % (index, num_test))
+
+                example = convert_to_tfrecords(image_data, flags)
+                tfrecord_writer.write(example.SerializeToString())
