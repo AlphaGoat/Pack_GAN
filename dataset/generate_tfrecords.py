@@ -4,6 +4,10 @@ test sets and turn each set into a respective tfrecord
 """
 
 import tensorflow as tf
+import numpy as np
+#from PIL import Image
+#from opencv import cv2
+import cv2
 import sqlite3
 import argparse
 import random
@@ -149,6 +153,12 @@ def partition_data(image_indices, flags):
 
     return train_indices, valid_indices, test_indices
 
+def load_image(file_path):
+    image = cv2.imread(file_path)
+    # As cv2 loads images as BGR, convert to RGB
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = image.astype(np.float32)
+    return image
 
 def convert_to_tfrecords(data_dict, flags):
     """
@@ -161,14 +171,25 @@ def convert_to_tfrecords(data_dict, flags):
     """
     # Retrieve image pixel data
     file_path = os.path.join(flags.datapath, flags.subreddit, data_dict['file_name'])
-    if data_dict['format'] == 'jpeg':
-        pixel_data = tf.image.decode_jpg(file_path)
+    #if data_dict['format'] == 'jpeg':
+    #    pixel_data = tf.image.decode_jpg(file_path)
 
-    else:
-        pixel_data = tf.image.decode_png(file_path)
+    #else:
+    #    pixel_data = tf.image.decode_png(file_path)
+        #pixel_data = tf.image.decode_image(image)
+    #with open(file_path, 'rb') as image_file:
+    #    raw_bytes = image_file.read()
+#    image = load_image(file_path)
+#    if data_dict['format'] == 'jpeg':
+#        raw_image = cv2.imencode('.jpg', image)[1].tostring()
+#
+#    else:
+#        raw_image = cv2.imencode('.png', image)[1].tostring()
+    with tf.io.gfile.Open(file_path, 'rb') as image_file:
+        encoded_image = image_file.read()
 
     return tf.train.Example(features=tf.train.Features(feature={
-        'image/raw': _bytes_feature(pixel_data),
+        'image/raw': _bytes_feature(encoded_image),
         'image/format': _bytes_feature(data_dict['format'].encode('utf-8')),
         'image/filename': _bytes_feature(data_dict['file_name']),
         'image/id': _int64_feature(data_dict['image_id']),
@@ -253,11 +274,11 @@ if __name__ == '__main__':
             'tags': [0, 37],
         }
 
-        flags.datapath = "/home/alphagoat/Projects/Pack_GAN/data/"
+        flags.datapath = "/home/alphagoat/Projects/PACK_GAN/data/"
         flags.subreddit = "THE_PACK"
 
-        save_path = os.join.path(flags.datapath, "single_example.tfrecords")
-        with tf.python_io.TFRecordWriter(save_path) as tfrecord_writer:
+        save_path = os.path.join(flags.datapath, flags.subreddit, "single_example.tfrecords")
+        with tf.io.TFRecordWriter(save_path) as tfrecord_writer:
             example = convert_to_tfrecords(data_dict, flags)
             tfrecord_writer.write(example.SerializeToString())
 
