@@ -155,6 +155,13 @@ if __name__ == '__main__':
                         help="Number of images to scrape from chosen subreddit"
                         )
 
+    parser.add_argument('--scrape_all', action='store_true',
+                        help="""
+                             Arg input to specify whether to try to scrape every image off
+                             a selected subreddit.
+                            """
+                        )
+
 
     #parser.add_argument('--client_id', type=
 
@@ -162,73 +169,48 @@ if __name__ == '__main__':
 
     subreddit = flags.subreddit
 
+    data_path = os.path.join(flags.dataset_path, subreddit)
+
+    # If a data directory for the specific subreddit we are collecting for doesn't exist,
+    # make it
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path, exist_ok=True)
+
     # open sqlite database for data scraped from this subreddit, or initialize
     # a new one if one for this subreddit hasn't been initialized yet
-    subreddit_db = sqlite3.connect(os.join(flags.dataset_path, flags.subreddit, '.sqlite3'))
-    cursor = subreddit_db.cursor()
+    print("sqlite database path: ", os.path.join(data_path, subreddit + '.sqlite3'))
+    with sqlite3.connect(os.path.join(data_path, subreddit, '.sqlite3')) as conn:
+        #subreddit_db = sqlite3.connect(os.path.join(data_path, subreddit, '.sqlite3'))
+        cursor = conn.cursor()
 
-    # Try to pull subreddit table, if it exists
-    try:
-        cursor.execute("""
-                       SELECT name FROM sqlite_master WHERE type='table' AND name='{}_metadata';
-                       """.format(subreddit))
-
-    except sqlite3.OperationalError:
-        # If it doesn't exist, create it
-        cursor.execute("""
-                       CREATE TABLE {}_metadata(image_id INTEGER PRIMARY KEY, filename TEXT,
-                       image_url TEXT, post_url TEXT, author_username TEXT, post_title TEXT,
-                       post_date DATETIME image_width INTEGER, image_height INTEGER
-                       """.format(subreddit)
-                       )
-
-    subreddit_url = reddit_url + '/r/' + flags.subreddit
-
-    # initialize variable to keep track of how many images we have pulled down
-    # from the subreddit thus far
-
-    json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
-                                                            limit=flags.num_images_to_scrape)
-
-    # Use sqlite to store image and post data we'd like to capture
-    if flags.scrape_all:
-        for post_data in json_data_list:
-
-            saved_post_data = scrape_images(post_data, flags.dataset_path)
-
-            filename = saved_post_data['file_name']
-
-            image_url = saved_post_data["info"]["image_url"]
-            post_url = saved_post_data["info"]["post_url"]
-            author   = saved_post_data["info"]["contributor_username"]
-            post_title   = saved_post_data["info"]["post_title"]
-            post_date = saved_post_data["info"]["post_date"]
-            file_name = saved_post_data["image"]["file_name"]
-            image_height = saved_post_data["image"]["image_height"]
-            image_width  = saved_post_data["image"]["image_width"]
-
-            # Insert scraped data into sqlite table
+        # Try to pull subreddit table, if it exists
+        try:
             cursor.execute("""
-                           INSERT INTO {}_metadata(file_name, image_url, post_url,
-                           author_username, post_title, post_date, image_width, image_height)
-                           VALUES(?,?,?,?,?,?,?,?)
-                           """, (file_name, image_url, post_url, author, post_title, post_date,
-                                 image_width, image_height))
+                           SELECT name FROM sqlite_master WHERE type='table' AND name='{}_metadata';
+                           """.format(subreddit))
 
-            # commit to database before moving onto next image
-            subreddit_db.commit()
+        except sqlite3.OperationalError:
+            # If it doesn't exist, create it
+            cursor.execute("""
+                           CREATE TABLE {}_metadata(image_id INTEGER PRIMARY KEY, filename TEXT,
+                           image_url TEXT, post_url TEXT, author_username TEXT, post_title TEXT,
+                           post_date DATETIME image_width INTEGER, image_height INTEGER
+                           """.format(subreddit)
+                           )
 
+        subreddit_url = reddit_url + '/r/' + flags.subreddit
 
+        # initialize variable to keep track of how many images we have pulled down
+        # from the subreddit thus far
 
-        while after_token:
+        json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
+                                                                limit=flags.num_images_to_scrape)
 
-
-            json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
-                                                                    count=flags.num_images_to_scrape,
-                                                                    after_token=after_token)
-
+        # Use sqlite to store image and post data we'd like to capture
+        if flags.scrape_all:
             for post_data in json_data_list:
-                saved_post_data = scrape_images(post_data, flags.dataset_path)
+
+                saved_post_data = scrape_images(post_data, data_path)
 
                 filename = saved_post_data['file_name']
 
@@ -250,56 +232,51 @@ if __name__ == '__main__':
                                      image_width, image_height))
 
                 # commit to database before moving onto next image
-                subreddit_db.commit()
-
-    else:
-        img_counter = 0
-
-        for post_data in json_data_list:
-
-            if img_counter == flags.num_images_to_scrape and flags.scrape_all != True:
-                break
-
-            saved_post_data = scrape_images(post_data, flags.dataset_path)
-
-            filename = saved_post_data['file_name']
-
-            image_url = saved_post_data["info"]["image_url"]
-            post_url = saved_post_data["info"]["post_url"]
-            author   = saved_post_data["info"]["contributor_username"]
-            post_title   = saved_post_data["info"]["post_title"]
-            post_date = saved_post_data["info"]["post_date"]
-            file_name = saved_post_data["image"]["file_name"]
-            image_height = saved_post_data["image"]["image_height"]
-            image_width  = saved_post_data["image"]["image_width"]
-
-            # Insert scraped data into sqlite table
-            cursor.execute("""
-                           INSERT INTO {}_metadata(file_name, image_url, post_url,
-                           author_username, post_title, post_date, image_width, image_height)
-                           VALUES(?,?,?,?,?,?,?,?)
-                           """, (file_name, image_url, post_url, author, post_title, post_date,
-                                 image_width, image_height))
-
-            # commit to database before moving onto next image
-            subreddit_db.commit()
-
-            img_counter += 1
+                conn.commit()
 
 
-        while after_token:
 
-            if img_counter == flags.num_images_to_scrape:
-                break
+            while after_token:
 
 
-            json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
-                                                                    count=flags.num_images_to_scrape,
-                                                                    after_token=after_token)
+                json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
+                                                                        count=flags.num_images_to_scrape,
+                                                                        after_token=after_token)
+
+                for post_data in json_data_list:
+                    saved_post_data = scrape_images(post_data, data_path)
+
+                    filename = saved_post_data['file_name']
+
+                    image_url = saved_post_data["info"]["image_url"]
+                    post_url = saved_post_data["info"]["post_url"]
+                    author   = saved_post_data["info"]["contributor_username"]
+                    post_title   = saved_post_data["info"]["post_title"]
+                    post_date = saved_post_data["info"]["post_date"]
+                    file_name = saved_post_data["image"]["file_name"]
+                    image_height = saved_post_data["image"]["image_height"]
+                    image_width  = saved_post_data["image"]["image_width"]
+
+                    # Insert scraped data into sqlite table
+                    cursor.execute("""
+                                   INSERT INTO {}_metadata(file_name, image_url, post_url,
+                                   author_username, post_title, post_date, image_width, image_height)
+                                   VALUES(?,?,?,?,?,?,?,?)
+                                   """, (file_name, image_url, post_url, author, post_title, post_date,
+                                         image_width, image_height))
+
+                    # commit to database before moving onto next image
+                    conn.commit()
+
+        else:
+            img_counter = 0
 
             for post_data in json_data_list:
-                saved_post_data = scrape_images(post_data, flags.dataset_path)
-                img_counter += 1
+
+                if img_counter == flags.num_images_to_scrape and flags.scrape_all != True:
+                    break
+
+                saved_post_data = scrape_images(post_data, data_path)
 
                 filename = saved_post_data['file_name']
 
@@ -320,10 +297,47 @@ if __name__ == '__main__':
                                """, (file_name, image_url, post_url, author, post_title, post_date,
                                      image_width, image_height))
 
-                subreddit_db.commit()
+                # commit to database before moving onto next image
+                conn.commit()
 
-# closing db connection
-subreddit_db.close()
+                img_counter += 1
+
+
+            while after_token:
+
+                if img_counter == flags.num_images_to_scrape:
+                    break
+
+
+                json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
+                                                                        count=flags.num_images_to_scrape,
+                                                                        after_token=after_token)
+
+                for post_data in json_data_list:
+                    saved_post_data = scrape_images(post_data, data_path)
+                    img_counter += 1
+
+                    filename = saved_post_data['file_name']
+
+                    image_url = saved_post_data["info"]["image_url"]
+                    post_url = saved_post_data["info"]["post_url"]
+                    author   = saved_post_data["info"]["contributor_username"]
+                    post_title   = saved_post_data["info"]["post_title"]
+                    post_date = saved_post_data["info"]["post_date"]
+                    file_name = saved_post_data["image"]["file_name"]
+                    image_height = saved_post_data["image"]["image_height"]
+                    image_width  = saved_post_data["image"]["image_width"]
+
+                    # Insert scraped data into sqlite table
+                    cursor.execute("""
+                                   INSERT INTO {}_metadata(file_name, image_url, post_url,
+                                   author_username, post_title, post_date, image_width, image_height)
+                                   VALUES(?,?,?,?,?,?,?,?)
+                                   """, (file_name, image_url, post_url, author, post_title, post_date,
+                                         image_width, image_height))
+
+                    conn.commit()
+
 
 
 
