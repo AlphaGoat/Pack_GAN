@@ -2,7 +2,6 @@
 Script to automatically divy dataset into train, valid, and
 test sets and turn each set into a respective tfrecord
 """
-
 import tensorflow as tf
 import numpy as np
 #from PIL import Image
@@ -158,6 +157,8 @@ def load_image(file_path):
     # As cv2 loads images as BGR, convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = image.astype(np.float32)
+    print("image shape: ", image.shape)
+    print("image dtype: ", image.dtype)
     return image
 
 def convert_to_tfrecords(data_dict, flags):
@@ -169,33 +170,19 @@ def convert_to_tfrecords(data_dict, flags):
 
     :return example: converted tf.Example
     """
-    # Retrieve image pixel data
     file_path = os.path.join(flags.datapath, flags.subreddit, data_dict['file_name'])
-    #if data_dict['format'] == 'jpeg':
-    #    pixel_data = tf.image.decode_jpg(file_path)
-
-    #else:
-    #    pixel_data = tf.image.decode_png(file_path)
-        #pixel_data = tf.image.decode_image(image)
-    #with open(file_path, 'rb') as image_file:
-    #    raw_bytes = image_file.read()
-#    image = load_image(file_path)
-#    if data_dict['format'] == 'jpeg':
-#        raw_image = cv2.imencode('.jpg', image)[1].tostring()
-#
-#    else:
-#        raw_image = cv2.imencode('.png', image)[1].tostring()
-    with tf.io.gfile.Open(file_path, 'rb') as image_file:
-        encoded_image = image_file.read()
+    with open(file_path, 'rb') as f:
+        image_bytes = f.read()
+        print('type image_bytes: ', type(image_bytes))
 
     return tf.train.Example(features=tf.train.Features(feature={
-        'image/raw': _bytes_feature(encoded_image),
-        'image/format': _bytes_feature(data_dict['format'].encode('utf-8')),
-        'image/filename': _bytes_feature(data_dict['file_name']),
-        'image/id': _int64_feature(data_dict['image_id']),
-        'image/height': _int64_feature(data_dict['height']),
-        'image/width': _int64_feature(data_dict['width']),
-        'image/tags': _int64_list_feature(data_dict['tags']),
+    'image/raw': _bytes_feature(image_bytes),
+    'image/format': _bytes_feature(data_dict['format'].encode('utf-8')),
+    'image/filename': _bytes_feature(data_dict['file_name'].encode('utf-8')),
+    'image/id': _int64_feature(data_dict['image_id']),
+    'image/height': _int64_feature(data_dict['height']),
+    'image/width': _int64_feature(data_dict['width']),
+    'image/tags': _int64_list_feature(data_dict['tags']),
     }))
 
 def _int64_feature(value):
@@ -208,6 +195,10 @@ def _floats_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 def _bytes_feature(value):
+    # BytesList won't unpack values from an eager tensor by default,
+    # so grab numpy values
+    if isinstance(value, type(tf.constant(0))):
+        value = value.numpy()
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
