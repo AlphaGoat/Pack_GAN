@@ -11,20 +11,26 @@ Peter J. Thomas
 """
 
 import tensorflow as tf
-from layers import WeightVariable, BiasVariable
 
+from PACK_GAN.models.layers import WeightVariable, BiasVariable
 
 class Generator(object):
 
     def __init__(self,
                  image_width,
                  image_height,
-                 image_channels):
+                 image_channels,
+                 latent_space_vector_dim,
+                 num_tags):
 
         # Provide dims of image we would like to generate
         self.image_width = image_width
         self.image_height = image_height
         self.image_channels = image_channels
+
+        # Provide dims of input
+        self.latent_space_vector_dim = latent_space_vector_dim
+        self.num_tags = num_tags
 
     def residual_block(self):
         """
@@ -55,7 +61,7 @@ class Generator(object):
 
             # Weight variable
             # shape: (batch_size, width * height * channels, 64 * 16 * 16)
-            wfc1_shape = (self.image_height * self.image_width * self.image_channels, 64 * 16 * 16)
+            wfc1_shape = (self.latent_space_dim + self.num_tags, 64 * 16 * 16)
             W_fc1 = WeightVariable(shape=wfc1_shape,
                                    name='W_fc1',
                                    model_scope=self.model_scope,
@@ -246,57 +252,94 @@ class Generator(object):
 
         return output
 
+    @tf.function
     def pixel_shuffle_x2_layer(self, input_fm):
         """
         Applies pixel shuffling to upsampled feature map.
         For an input of x256 channels, new feature maps will be composed using the
         next x4 channels in iteration.
 
+        Function documented in the paper:
+            "Real-Time Single Image and Video Super-Resolution Using an Efficient
+             Sub-Pixel Convolutional Neural Network" -- Shi W. (2016)
+
         :param input_fm: input tensor of shape -- (batch_size, fm_x, fm_y, 256)
 
         :return out: output tensor of shape -- (batch_size, 2 * fm_x, 2 * fm_y, 64)
         """
+        # Flatten input_fm along channel dimension
+        #input_channels = tf.shape(input_fm)[3]
+        #r = tf.math.sqrt(tf.cast(input_channels, dtype=tf.float32))
+        fm_x = tf.shape(input_fm)[1]
+        fm_y = tf.shape(input_fm)[2]
+
+        # Reshape tensor to combine 2x channels along x-dim
+        pix_shuffle_xdim = tf.reshape(input_fm, [1, 2 * fm_x, fm_y, -1])
+
+        # Perform transpose and reshape tensor to combine the 2x remaining channels along
+        # the y-dim
+        pix_shuffle_x2_output = tf.reshape(tf.transpose(pix_shuffle_xdim, perm=[0, 2, 1, 3]),
+                                           [1, 2 * fm_x, 2 * fm_y, -1])
+
+        return pix_shuffle_x2_output
+
+#    @tf.function
+#    def pixel_shuffle_x2_layer(self, input_fm):
+#        """
+#        Applies pixel shuffling to upsampled feature map.
+#        For an input of x256 channels, new feature maps will be composed using the
+#        next x4 channels in iteration.
+#
+#        :param input_fm: input tensor of shape -- (batch_size, fm_x, fm_y, 256)
+#
+#        :return out: output tensor of shape -- (batch_size, 2 * fm_x, 2 * fm_y, 64)
+#        """
+#        fm_shape = tf.shape(input_fm)
+#        num_channels = fm_shape[3]
+#
+#        def apply_pix_shuffling_to_batch(batch):
+#
+#            # Compose a shuffled pixel map with every 4xgroup of input feature
+#            # maps by iterating over the channel dim in intervals of 4:
+#            i = tf.constant(0)
+#            cond = lambda i, iter_batch: tf.less(i, num_channels // 4)
+#
+#            def gather_shuffled_pixels(iterable, iter_batch):
+#
+#                # Compose indices that will be needed to perform pixel shuffling operation
+#                x_dim, y_dim, channel_dim = tf.meshgrid(tf.range(tf.shape(input_fm)[0]),
+#                                                        tf.range(tf.shape(input_fm)[1]),
+#                                                        tf.range(4*iterable, 4*(iterable+1))
+#                                                        )
+#
+#                coords = tf.stack([x_dim, y_dim, channel_dim], axis=-1)
+#
+#                # Gather the pixels from a 4x group of feature maps
+#                # shape: (2 * fm_x, 2* fm_y, 1)
+#                upsampled_shuffled_feature_map = tf.gather_nd(iter_batch, coords)
+#
+#                # update iterator
+#                iterable = tf.add(iterable, 1)
+#                tf.print("(pjt) iterable: ", iterable)
+#
+#                return tf.add(iterable, 1), upsampled_shuffled_feature_map
+#
+#            # Perform pixel shuffling operation
+#            # input shape: (fm_x, fm_y, 256)
+#            # output shape: (2 * fm_x, 2 * fm_y, 64)
+#            pixel_shuffled_batch = tf.while_loop(cond, gather_shuffled_pixels, i)[1]
+#
+#            return pixel_shuffled_batch
+#
+#        # Maps pixel shuffling operation to a single batch.
+#        # Input shape: (batch_size, fm_x, fm_y, 256)
+#        # Output shape: (batch_size, 2 * fm_x, 2 * fm_y, 64)
+#        pix_shuffled_feature_maps = tf.map_fn(apply_pix_shuffling_to_batch, input_fm)
+#
+#        return pix_shuffled_feature_maps
 
 
-        def apply_pix_shuffling_to_batch(batch):
 
-            # Compose a shuffled pixel map with every 4xgroup of input feature
-            # maps by iterating over the channel dim in intervals of 4:
-            i = tf.constant(0)
-            cond = lambda i: tf.less(i, 64)
-
-            def gather_shuffled_pixels():
-
-                # Compose indices that will be needed to perform pixel shuffling operation
-                x_dim, y_dim, channel_dim = tf.meshgrid(tf.range(tf.shape(input_fm)[0]),
-                                                        tf.range(tf.shape(input_fm)[1]),
-                                                        tf.range(4*i, 4*(i+1))
-                                                        )
-
-                coords = tf.stack([x_dim, y_dim, channel_dim], axis=-1)
-
-                # Gather the pixels from a 4x group of feature maps
-                # shape: (2 * fm_x, 2* fm_y, 1)
-                upsampled_shuffled_feature_map = tf.gather_nd(batch, coords)
-
-                # update iterator
-                i = tf.add(i, 1)
-
-                return upsampled_shuffled_feature_map
-
-            # Perform pixel shuffling operation
-            # input shape: (fm_x, fm_y, 256)
-            # output shape: (2 * fm_x, 2 * fm_y, 64)
-            pixel_shuffled_batch = tf.while_loop(cond, gather_shuffled_pixels(batch), i)
-
-            return pixel_shuffled_batch
-
-        # Maps pixel shuffling operation to a single batch.
-        # Input shape: (batch_size, fm_x, fm_y, 256)
-        # Output shape: (batch_size, 2 * fm_x, 2 * fm_y, 64)
-        pix_shuffled_feature_maps = tf.map_fn(apply_pix_shuffling_to_batch, input_fm)
-
-        return pix_shuffled_feature_maps
 
 
 

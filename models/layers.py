@@ -65,31 +65,22 @@ class WeightVariable(object):
     """
     Base class for weight parameters to be used in learning layers
     """
-    def __init__(self,
-                 shape,
-                 name,
-                 model_scope,
-                 initializer=None):
+    def __new__(cls,
+                shape,
+                name,
+                model_scope,
+                initializer=None):
 
-        self.shape = shape
-        self.name = name
-        self.model_scope = model_scope
-        self.initialize = initializer
+        instance = super(WeightVariable, cls).__new__(cls)
+        instance.__init__(shape,
+                          name,
+                          model_scope,
+                          initializer=intializer)
 
-    def call(self):
-
-        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
-            initial = tf.get_variable(self.name, self.shape,
-                                      initializer=self.initializer,
-                                      trainable=True)
-            variable_summaries(initial)
-
+        # Initialize weight variables
+        initial = instance.initialize_variable()
         return initial
 
-class BiasVariable(object):
-    """
-    Base class for bias parameters to be used in learning layers
-    """
     def __init__(self,
                  shape,
                  name,
@@ -101,15 +92,115 @@ class BiasVariable(object):
         self.model_scope = model_scope
         self.initializer = initializer
 
-    def call(self):
+    def __call__(self):
+        # Initialize Weight Variable
+        with tf.name_scope(self.model_scope):
+            initial = tf.Variable(
+                self.initializer(self.shape),
+                trainable=True,
+                name=self.name,
+                dtype=tf.float32,
+                )
 
-        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
-            initial = tf.get_variable(self.name, self.shape,
-                                      intiializer=self.initializer,
-                                      trainable=True)
+            assert initial.name == "{0}/{1}:0".format(self.model_scope, self.name)
+
             variable_summaries(initial)
 
+            return initial
+
+        #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
+#        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
+#            initial = tf.get_variable(self.name, self.shape,
+#                                      initializer=self.initializer,
+#                                      trainable=True)
+#            variable_summaries(initial)
+#
+#
+#        return initial
+
+class BiasVariable(object):
+    """
+    Base class for bias parameters to be used in learning layers
+    """
+    def __new__(cls,
+                shape,
+                name,
+                model_scope,
+                initializer=None):
+
+        instance = super(BiasVariable, cls).__new__(cls)
+        instance.__init__(shape,
+                          name,
+                          model_scope,
+                          initializer=intializer)
+
+        # Initialize weight variables
+        intial_weights = instance.initialize_variable()
         return initial
+
+    def __init__(self,
+                 shape,
+                 name,
+                 model_scope,
+                 initializer=None):
+
+        self.shape = shape
+        self.name = name
+        self.model_scope = model_scope
+        self.initializer = initializer
+
+    def initialize_variable(self):
+        # Initialize Weight Variable
+        with tf.name_scope(self.model_scope):
+            initial = tf.Variable(
+                self.initializer(self.shape),
+                trainable=True,
+                name=self.name,
+                dtype=tf.float32,
+                )
+
+            assert initial.name == "{0}/{1}:0".format(self.model_scope, self.name)
+
+            variable_summaries(initial)
+
+            return initial
+
+        #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
+#        variable_summaries(initial)
+#        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
+#            initial = tf.get_variable(self.name, self.shape,
+#                                      intiializer=self.initializer,
+#                                      trainable=True)
+#            variable_summaries(initial)
+#
+#        return initial
+
+class ResidualLayer(object):
+    """
+    Base class for residual layers as seen in ResNet
+    """
+    def __init__(self,
+                 name,
+                 model_scope,
+                 filter1_shape,
+                 filter2_shape,
+                 bias1_shape,
+                 bias2_shape,
+                 strides_1,
+                 strides_2,
+                 weight_initializer,
+                 num_output_channels):
+
+        self.name = name
+        self.model_scope = model_scope
+
+        # Initialize weight variables
+        self.filter1_shape = filter1_shape
+        self.filter1 = WeightVariable(
+
+
+
+
 
 
 def variable_summaries(var):
