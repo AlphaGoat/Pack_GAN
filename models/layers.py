@@ -69,13 +69,15 @@ class WeightVariable(object):
                 shape,
                 name,
                 model_scope,
+                layer_scope,
                 initializer=None):
 
         instance = super(WeightVariable, cls).__new__(cls)
         instance.__init__(shape,
                           name,
                           model_scope,
-                          initializer=intializer)
+                          layer_scope,
+                          initializer=initializer)
 
         # Initialize weight variables
         initial = instance.initialize_variable()
@@ -85,28 +87,43 @@ class WeightVariable(object):
                  shape,
                  name,
                  model_scope,
+                 layer_scope,
                  initializer=None):
 
         self.shape = shape
         self.name = name
         self.model_scope = model_scope
+        self.layer_scope = layer_scope
         self.initializer = initializer
 
-    def __call__(self):
+    def initialize_variable(self):
         # Initialize Weight Variable
-        with tf.name_scope(self.model_scope):
-            initial = tf.Variable(
-                self.initializer(self.shape),
-                trainable=True,
-                name=self.name,
-                dtype=tf.float32,
-                )
+        initial = tf.Variable(
+            self.initializer(self.shape),
+            trainable=True,
+            name=self.name,
+            dtype=tf.float32,
+            )
 
-            assert initial.name == "{0}/{1}:0".format(self.model_scope, self.name)
+        #print("initial.name: ", initial.name)
+        #print("name we want: ", "{0}/{1}:0".format(self.layer_scope, self.name))
 
-            variable_summaries(initial)
+        assert initial.name == "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name)
 
-            return initial
+        self.initial = initial
+        variable_summaries(initial)
+
+        return initial
+
+    def __call__(self):
+
+        # Call variable_summaries for updated weights
+        variable_summaries(self.initial, self._counter)
+        self._counter += 1
+
+        return self.initial
+
+
 
         #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
 #        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
@@ -126,32 +143,37 @@ class BiasVariable(object):
                 shape,
                 name,
                 model_scope,
+                layer_scope,
                 initializer=None):
 
         instance = super(BiasVariable, cls).__new__(cls)
         instance.__init__(shape,
                           name,
                           model_scope,
-                          initializer=intializer)
+                          layer_scope,
+                          initializer=initializer)
 
         # Initialize weight variables
-        intial_weights = instance.initialize_variable()
+        initial = instance.initialize_variable()
         return initial
 
     def __init__(self,
                  shape,
                  name,
                  model_scope,
+                 layer_scope,
                  initializer=None):
 
         self.shape = shape
         self.name = name
         self.model_scope = model_scope
+        self.layer_scope = layer_scope
         self.initializer = initializer
+        self._counter = 0
 
     def initialize_variable(self):
         # Initialize Weight Variable
-        with tf.name_scope(self.model_scope):
+        with tf.name_scope(self.layer_scope):
             initial = tf.Variable(
                 self.initializer(self.shape),
                 trainable=True,
@@ -159,11 +181,20 @@ class BiasVariable(object):
                 dtype=tf.float32,
                 )
 
-            assert initial.name == "{0}/{1}:0".format(self.model_scope, self.name)
+            assert initial.name == "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name)
 
-            variable_summaries(initial)
+            self.initial = initial
+            variable_summaries(self.initial, self._counter)
 
             return initial
+
+    def __call__(self):
+
+        # Call variable_summaries for updated weights
+        variable_summaries(self.initial, self._counter)
+        self._counter += 1
+
+        return self.initial
 
         #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
 #        variable_summaries(initial)
@@ -196,28 +227,31 @@ class ResidualLayer(object):
 
         # Initialize weight variables
         self.filter1_shape = filter1_shape
-        self.filter1 = WeightVariable(
+        self.filter1 = WeightVariable()
+        pass
+
+    # TODO: Finish residual layer class
+    #       probably will never use it, but it would be
+    #       good to have it just in case I want to make
+    #       a test model quickly
 
 
 
-
-
-
-def variable_summaries(var):
+def variable_summaries(var, step):
     """
     Method for saving summary statistics to TensorBoard
     """
     with tf.name_scope('summaries'):
         mean = tf.reduce_mean(var)
-        tf.summary.scalar('mean', mean)
+        tf.summary.scalar('mean', mean, step=step)
 
         with tf.name_scope('std_dev'):
             stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
 
-        tf.summary.scalar('stddev', stddev)
-        tf.summary.scalar('max', tf.reduce_max(var))
-        tf.summary.scalar('min', tf.reduce_min(var))
-        tf.summary.histogram('histogram', var)
+        tf.summary.scalar('stddev', stddev, step=step)
+        tf.summary.scalar('max', tf.reduce_max(var), step=step)
+        tf.summary.scalar('min', tf.reduce_min(var), step=step)
+        tf.summary.histogram('histogram', var, step=step)
 
 
 
