@@ -3,7 +3,7 @@ Implements modified SRResNet generator architecture, as detailed in
 'Towards the Automatic Anime Characters Creation with Generative
 Adversarial Neural Networks', Yanghua et. al 2017
 --------------------------
-[INSERT ARXIV LINK HERE]
+https://arxiv.org/pdf/1708.05509.pdf
 -------------------------
 
 Peter J. Thomas
@@ -56,6 +56,7 @@ class Generator(object):
         #TODO: Elementwise Sum layer
         pass
 
+    @tf.function
     def forward_pass(self, x, step=0):
         """
         Params:
@@ -72,15 +73,17 @@ class Generator(object):
         # Initial dense layer
         with tf.name_scope(self.model_scope):
 
-            layer_scope = 'fully_connected1'
-            with tf.name_scope(layer_scope):
+            with tf.name_scope('fully_connected1') as layer_scope:
+
+                #print("layer_scope as presented in generator: ", layer_scope)
+                print("We are currently on step: ", step)
 
                 # Weight variable
                 # shape: (batch_size, width * height * channels, 64 * 16 * 16)
                 wfc1_shape = (self.latent_space_vector_dim + self.num_tags, 64 * 16 * 16)
                 W_fc1 = WeightVariable(shape=wfc1_shape,
                                        name='W_fc1',
-                                       model_scope=self.model_scope,
+                                       #model_scope=self.model_scope,
                                        layer_scope=layer_scope,
                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                   stddev=0.02),
@@ -91,7 +94,7 @@ class Generator(object):
                 # Shape: (batch_size, 64 * 16 * 16)
                 b_fc1 = BiasVariable(shape=(64 * 16* 16,),
                                      name='b_fc1',
-                                     model_scope=self.model_scope,
+                                     #model_scope=self.model_scope,
                                      layer_scope=layer_scope,
                                      initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                 stddev=0.02),
@@ -105,7 +108,7 @@ class Generator(object):
                 #batch_norm_out_fc1 = tf.nn.batch_normalization(out_fc1, training=
                 batch_norm_out_fc1 = BatchNormalization(
                                                 name='BatchNorm_fc1',
-                                                model_scope=self.model_scope,
+                                                #model_scope=self.model_scope,
                                                 layer_scope=layer_scope,
                                                 summary_update_freq=self.variable_summary_update_freq,
                                                 )(out_fc1, step)
@@ -126,23 +129,22 @@ class Generator(object):
 
             # Initialize 16 Residual blocks
             for i in range(1, 17):
-                layer_scope = 'residual_block{}'.format(i)
-                with tf.name_scope(layer_scope):
+                with tf.name_scope('residual_block{}'.format(i)) as layer_scope:
 
                     # first 2-D Convolutional Layer:
                     # Initializing filter for first conv layer
                     kernel1_res = WeightVariable(shape=[3, 3, 64, 64],
                                                  name='Filter1_resblock{}'.format(i),
-                                                 model_scope=self.model_scope,
+                                                 #model_scope=self.model_scope,
                                                  layer_scope=layer_scope,
                                                  initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                             stddev=0.02),
-                                                 summary_update_feq=self.variable_summary_update_freq,
+                                                 summary_update_freq=self.variable_summary_update_freq,
                                                 )(step)
                     # Initializing bias parameters for first conv layer
                     bias1_res = BiasVariable(shape=(64,),
                                              name='bias1_resblock{}'.format(i),
-                                             model_scope=self.model_scope,
+                                             #model_scope=self.model_scope,
                                              layer_scope=layer_scope,
                                              initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                         stddev=0.02),
@@ -172,14 +174,14 @@ class Generator(object):
                     # initializing second filter
                     kernel2_res = WeightVariable(shape=[3, 3, 64, 64],
                                                  name='Filter2_resblock{}'.format(i),
-                                                 model_scope=self.model_scope,
+                                                 #model_scope=self.model_scope,
                                                  layer_scope=layer_scope,
                                                  initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                             stddev=0.02)
                                                  )(step)
                     bias2_res = BiasVariable(shape=(64,),
                                              name='bias2_resblock{}'.format(i),
-                                             model_scope=self.model_scope,
+                                             #model_scope=self.model_scope,
                                              layer_scope=layer_scope,
                                              initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                         stddev=0.02)
@@ -239,19 +241,19 @@ class Generator(object):
             # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
             #           x and y dimension and randomly shuffles pixels in those dimensions
             for i in range(1, 4):
-                with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)):
+                with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
 
                     # Initializer filter and bias for upsampling convolution
                     upscale_kernel = WeightVariable(shape=[3, 3, 64, 256],
-                                                    name='Filter_PixelShuffle1',
-                                                    model_scope=self.model_scope,
+                                                    name='Filter1_PixelShuffle',
+                                                    #model_scope=self.model_scope,
                                                     layer_scope=layer_scope,
                                                     initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                                stddev=0.02)
                                                     )(step)
                     upscale_bias = BiasVariable(shape=(256,),
                                                 name='bias_PixelShuffle{}'.format(i),
-                                                model_scope=self.model_scope,
+                                                #model_scope=self.model_scope,
                                                 layer_scope=layer_scope,
                                                 initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                            stddev=0.02)
@@ -281,18 +283,18 @@ class Generator(object):
             # (batch_size, 128, 128, 64)
 
             # Final convolution layer
-            with tf.name_scope('final_convolution'):
+            with tf.name_scope('final_convolution') as layer_scope:
 
                 final_conv_kernel = WeightVariable(shape=[9, 9, 64, 3],
                                                    name='Filter_final',
-                                                   model_scope=self.model_scope,
+                                                   #model_scope=self.model_scope,
                                                    layer_scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                               stddev=0.02)
                                                    )(step)
                 final_conv_bias = BiasVariable(shape=(3,),
                                                name='bias_final',
-                                               model_scope=self.model_scope,
+                                               #model_scope=self.model_scope,
                                                layer_scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.02,
                                                                                           stddev=0.02)

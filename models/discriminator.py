@@ -24,7 +24,7 @@ class Discriminator(object):
         self.image_height = image_height
         self.image_channels = image_channels
 
-    def forward_pass(self, x):
+    def forward_pass(self, x, step):
         """
         :param x: input image batch (either from real dataset or generator)
 
@@ -41,21 +41,23 @@ class Discriminator(object):
                             on a certain tag detailing an image
         """
         # initial convolution
-        with tf.name_scope('initial_conv'):
+        with tf.name_scope('initial_conv') as layer_scope:
 
             initial_kernel = WeightVariable(shape=[4, 4, 3, 32],
                                             name='Filter_initial',
-                                            model_scope=self.model_scope,
+                                            #model_scope=self.model_scope,
+                                            layer_scope=layer_scope,
                                             initializer=tf.initializer.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             initial_bias = BiasVariable(shape=(32,),
                                         name='bias_initial',
-                                        model_scope=self.model_scope,
+                                        #model_scope=self.model_scope,
+                                        layer_scope=layer_scope,
                                         initializer=tf.initializer.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
-                                        )
+                                        )(step)
 
             feature_map = tf.nn.conv2d(x, initial_kernel, strides=[2, 2, 1, 1], padding='SAME')
 
