@@ -18,11 +18,18 @@ class Discriminator(object):
     def __init__(self,
                  image_width,
                  image_height,
-                 image_channels):
+                 image_channels,
+                 num_tags,
+                 variable_summary_update_freq=10):
 
         self.image_width = image_width
         self.image_height = image_height
         self.image_channels = image_channels
+
+        self.num_tags = num_tags
+
+        # how often do we want to see tensorboard summaries for model parameters?
+        self.variable_summary_update_freq = variable_summary_update_freq
 
     def forward_pass(self, x, step):
         """

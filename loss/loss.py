@@ -27,10 +27,10 @@ class DRAGANLoss(object):
         # adversarial training balance factor (note: in the paper Zhout et. al 2017,
         # it is detailed that the best value to choose for this hyperparameter is
         # the number of tags (attributes) that we are assigning to the problem space
-        self.adv_balance_factor = adv_balance_factor
+        self.adv_lambda = adv_balance_factor
 
         # Gradient penalty factor applied to discrinator loss
-        self.gp_balance_factor = gp_balance_factor
+        self.gp_lambda = gp_balance_factor
 
     def adversarial_discriminator_loss(self,
                                        y_pred_real,

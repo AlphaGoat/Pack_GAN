@@ -1,4 +1,5 @@
 import tensorflow as tf
+import functools
 
 
 class Conv2D(object):
@@ -43,7 +44,7 @@ class Conv2D(object):
 
         self.activation_fn = activation_fn
 
-
+    #@tf.function
     def call(self, x):
 
         # Perform convolution operation
@@ -71,84 +72,86 @@ class BatchNormalization(object):
     """
     def __init__(self,
                  name,
-                 model_scope,
+                 #model_scope,
                  layer_scope,
                  summary_update_freq=10):
 
         # Variables to keep track of name scope of operation
-        self.model_scope = model_scope
+        #self.model_scope = model_scope
         self.layer_scope = layer_scope
-        self.name = name
+        self.batch_norm_name = name
+        self.batch_norm_scope =  "{0}/{1}".format(self.layer_scope,
+                                                  self.batch_norm_name)
 
         # Internal variable to keep track of the update frequency for
         # tensorboard summaries
         self.summary_update_freq = summary_update_freq
 
-    def initialize_weights(self, param_shape):
+    def initialize_weights(self, param_shape, layer_scope):
         """
         Initializes tensors to hold mean, variance,
         scale, and bias hyperparameters
         """
-        with tf.name_scope(self.name):
-            self.batch_norm_scope =  "{0}/{1}".format(self.layer_scope, self.name)
+#            # Tensor for calculated means (non trainable)
+#            self.t_mean = WeightVariable(
+#                                shape=(param_shape,),
+#                                name='mean_tensor',
+#                                model_scope=self.model_scope,
+#                                layer_scope=self.batch_norm_scope,
+#                                initializer=tf.initializers.zeros,
+#                                summary_update_freq=self.summary_update_freq,
+#                                )
+#
+#            # Tensor for calculated variances
+#            self.t_var = WeightVariable(
+#                                shape=(param_shape,),
+#                                name='var_tensor',
+#                                model_scope=self.model_scope,
+#                                layer_scope=self.batch_norm_scope,
+#                                initializer=tf.initializers.zeros,
+#                                summary_update_freq=self.summary_update_freq,
+#                                )
 
-            # Tensor for calculated means
-            self.t_mean = WeightVariable(
-                                shape=(param_shape,),
-                                name='mean_tensor',
-                                model_scope=self.model_scope,
-                                layer_scope=self.batch_norm_scope,
-                                initializer=tf.initializers.zeros,
-                                summary_update_freq=self.summary_update_freq,
-                                )
+        # Tensor for offset parameters
+        self.t_beta = WeightVariable(
+                            shape=(param_shape,),
+                            name='offset_tensor',
+                            #model_scope=self.model_scope,
+                            layer_scope=layer_scope,
+                            initializer=tf.zeros,
+                            summary_update_freq=self.summary_update_freq,
+                            )
 
-            # Tensor for calculated variances
-            self.t_var = WeightVariable(
-                                shape=(param_shape,),
-                                name='var_tensor',
-                                model_scope=model_scope,
-                                layer_scope=batch_norm_scope,
-                                initializer=tf.initializers.zeros,
-                                summary_update_freq=self.summary_update_freq,
-                                )
-
-            # Tensor for offset parameters
-            self.t_beta = WeightVariable(
-                                shape=(param_shape,),
-                                name='offset_tensor',
-                                model_scope=model_scope,
-                                layer_scope=batch_norm_scope,
-                                initializer=tf.initializers.zeros,
-                                summary_update_freq=self.summary_update_freq,
-                                )
-
-            # Tensor for scaling parameters
-            self.t_gamma = WeightVariable(
-                                shape=(param_shape,),
-                                name='scale_tensor',
-                                model_scope=model_scope,
-                                layer_scope=batch_norm_scope,
-                                initializer=tf.initializers.zeros,
-                                summary_update_freq=self.summary_update_freq,
-                                )
+        # Tensor for scaling parameters
+        self.t_gamma = WeightVariable(
+                            shape=(param_shape,),
+                            name='scale_tensor',
+                            #model_scope=self.model_scope,
+                            layer_scope=layer_scope,
+                            initializer=tf.zeros,
+                            summary_update_freq=self.summary_update_freq,
+                            )
 
     def __call__(self, x, step=0):
 
         # If first step in training loop, initialize weights
-        if step == 0:
-            input_shape = tf.shape(x)
-            param_shape = input_shape[-1]
+        with tf.name_scope(self.batch_norm_name) as layer_scope:
+            if step == 0:
+                input_shape = tf.shape(x)
+                param_shape = input_shape[-1]
 
-            self.initialize_weights(param_shape)
+                self.initialize_weights(param_shape, layer_scope)
 
-        return tf.nn.batch_normalization(x,
-                                         mean=self.t_mean(step),
-                                         variance=self.t_var(step),
-                                         offset=self.t_beta(step),
-                                         scale=self.t_gamma(step),
-                                         variance_epsilon=0.001
+            # Calculate the mean and variance over batch dimension of input
+            mean, variance = tf.nn.moments(x, axes=[0])
+
+            return tf.nn.batch_normalization(x,
+                                             mean=mean,
+                                             variance=variance,
+                                             offset=self.t_beta(step),
+                                             scale=self.t_gamma(step),
+                                             variance_epsilon=0.001
                                          )
-
 
 class WeightVariable(object):
     """
@@ -158,7 +161,7 @@ class WeightVariable(object):
     def __init__(self,
                  shape,
                  name,
-                 model_scope,
+                 #model_scope,
                  layer_scope,
                  initializer=None,
                  summary_update_freq=1,
@@ -169,7 +172,7 @@ class WeightVariable(object):
 
         # Variables to keep track of variable name space
         self.name = name
-        self.model_scope = model_scope
+        #self.model_scope = model_scope
         self.layer_scope = layer_scope
 
         # Update frequency for tensorboard summaries. If 'None',
@@ -178,12 +181,12 @@ class WeightVariable(object):
 
         # if no initializer is provided, initialize params as zeros
         if not initializer:
-            self.initializer = tf.initializers.zeros
+            self.initializer = tf.zeros
         else:
             self.initializer=initializer
 
-        # initialize internal weight variable
-        self.initialize_variable()
+#        # initialize internal weight variable
+#        self.initialize_variable()
 
         # Internal step variable to pass to summaries
         self._counter = 0
@@ -199,20 +202,28 @@ class WeightVariable(object):
             )
 
         #print("initial.name: ", initial.name)
-        #print("name we want: ", "{0}/{1}:0".format(self.layer_scope, self.name))
+        #print("model_scope: ", self.model_scope)
+        #print("layer_scope: ", self.layer_scope)
+        #print("name: ", self.name)
+        #print("name we want: ", "{0}{1}:0".format(self.layer_scope, self.name))
         #print("actual name of variable: ", initial.name)
 
-        assert initial.name == "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name)
+        assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
 
         self.initial = initial
         #variable_summaries(initial, self._counter)
 
         #return initial
 
+    #@tf.function
     def __call__(self, step):
 
         # create summaries for updated weights
         self._counter = step
+        print("in WeightVariable, we are on step: ", step)
+        if self._counter == 0:
+            self.initialize_variable()
+
         if self._counter % self.summary_update_freq == 0:
             variable_summaries(self.initial, self._counter)
 
@@ -229,7 +240,7 @@ class WeightVariable(object):
 #
 #
 #        return initial
-
+#@tf.function
 class BiasVariable(object):
     """
     Base class for bias parameters to be used in learning layers
@@ -238,7 +249,7 @@ class BiasVariable(object):
     def __init__(self,
                  shape,
                  name,
-                 model_scope,
+                 #model_scope,
                  layer_scope,
                  initializer=None,
                  summary_update_freq=1,
@@ -249,7 +260,7 @@ class BiasVariable(object):
 
         # Variables keeping track of variable name space
         self.name = name
-        self.model_scope = model_scope
+        #self.model_scope = model_scope
         self.layer_scope = layer_scope
 
         # If no initializer is provided, initialize params as zeros
@@ -262,7 +273,7 @@ class BiasVariable(object):
         self.summary_update_freq = summary_update_freq
 
         # Initialize internal weight variable
-        self.initialize_variable()
+        #self.initialize_variable()
 
         # Internal step variable to pass to summaries
         self._counter = 0
@@ -280,17 +291,20 @@ class BiasVariable(object):
         #print("What name should be: ", "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name))
         #print("initial name: ", initial.name)
 
-        assert initial.name == "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name)
+        assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
 
         self.initial = initial
         #variable_summaries(self.initial, self._counter)
 
             #return initial
 
+    #@tf.function
     def __call__(self, step):
 
         # Call variable_summaries for updated weights
         self._counter = step
+        if self._counter == 0:
+            self.initialize_variable()
 
         if self._counter % self.summary_update_freq == 0:
             variable_summaries(self.initial, self._counter)
@@ -337,6 +351,45 @@ class ResidualLayer(object):
     #       a test model quickly
 
 
+def doublewrap(function):
+    """
+    A decorator decorator, allowing the decorator to be used without
+    parentheses if no arguments are provided. All arguments must be optional.
+
+    source: https://gist.github.com/danijar/8663d3bbfd586bffecf6a0094cd116f2
+    """
+    @functools.wraps(function)
+    def decorator(*args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            return function(args[0])
+        else:
+            return lambda wrapee: function(wrapee, *args, **kwargs)
+    return decorator
+
+@doublewrap
+def define_scope(function, scope=None, *args, **kwargs):
+    """
+    A decorator for functions that define TensorFlow operations. The wrapped
+    function will only be executed once. Subsequent calls to it will directly
+    return the result so that operations are added to the graph only once.
+
+    The operations added by the function live within a tf.variable_scope(). If
+    this decorator is used with arguments, they will be forwarded to the
+    variable scope. The scope name defaults to the name of the wrapped function.
+
+    source: https://gist.github.com/danijar/8663d3bbfd586bffecf6a0094cd116f2
+    """
+    attribute = '_cache_' + function.__name__
+    name = scope or function.__name__
+    @property
+    @functools.wraps(function)
+    def decorator(self):
+        if not hasattr(self, attribute):
+            with tf.variable_scope(name, *args, **kwargs):
+                setattr(self, attribute, function(self))
+
+        return getattr(self, attribute)
+    return decorator
 
 def variable_summaries(var, step):
     """
