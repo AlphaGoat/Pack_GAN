@@ -11,10 +11,11 @@ import os
 import argparse
 
 from loss.loss import DRAGANLoss
-from models.generator import Generator
+from models.dragan.generator import SRResNet
 from models.discriminator import Discriminator
 from dataset.real_dataset_generator import DatasetGenerator
 from dataset.noise_generator import NoiseGenerator
+from utils.tensorboard_plotting import plot_images
 
 def main(flags):
 
@@ -91,13 +92,13 @@ def main(flags):
     else:
         latent_space_vector_dim = image_width
 
-    generator = Generator(image_width,
-                          image_height,
-                          image_channels,
-                          latent_space_vector_dim,
-                          flags.num_tags,
-                          variable_summary_update_freq=parameter_summary_update_freq,
-                          )
+    generator = SRResNet(image_width,
+                         image_height,
+                         image_channels,
+                         latent_space_vector_dim,
+                         flags.num_tags,
+                         variable_summary_update_freq=parameter_summary_update_freq,
+                         )
 
     discriminator = Discriminator(image_width,
                                   image_height,
@@ -140,6 +141,8 @@ def main(flags):
     with writer.as_default():
 
         # Initiate training loop
+        running_discriminator_loss = 0.0
+        running_generator_loss = 0.0
         for epoch in range(flags.num_epochs):
 
             for step in range(len(train_real_data_generator)):
@@ -178,6 +181,27 @@ def main(flags):
                 discriminator_optimizer.minimize(discriminator_loss)
 
                 generator_optimizer.minimize(generator_loss)
+
+                # Add to running losses for both models
+                running_discriminator_loss += discriminator_loss
+                running_generator_loss += generator_loss
+
+                # Every 1000th step, display statistics
+                if step % 1000 == 0:
+
+                    # log running loss for discriminator
+                    writer.add_scalar('training_discriminator_loss',
+                                      running_discriminator_loss / 1000,
+                                      epoch * len(train_real_data_generator) + step)
+
+                    writer.add_scalar('training_generator_loss',
+                                      running_generator_loss / 1000,
+                                      epoch * len(train_real_data_generator) + step)
+
+                    # log figure displaying discriminator's predictions on a real image
+                    # as well as predictions on a generated image
+                    writer.add_figure('real image vs. generated image',
+                                      plot_images(
 
 
 
