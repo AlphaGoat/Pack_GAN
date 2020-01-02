@@ -1,21 +1,13 @@
-import requests
-import urllib
-import contextlib
 import argparse
-
-#import sys
+import contextlib
+import datetime
 import os
+import requests
 import sqlite3
 import time
-import datetime
+import urllib
 
 from PIL import Image
-
-#sys.setdefaultencoding('UTF8')
-
-# Retrieve the current image id from the number of images
-# currently in the data directory
-
 
 def retrieve_reddit_data_json(subreddit_url,
                               limit=5,
@@ -141,7 +133,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset_path', type=str,
-                        default='/mnt/Data/machineLearningData/The_Pack_Images',
+                        default='/mnt/Data/machineLearningData/',
                         help='Directory to deposit scraper data'
                         )
 
