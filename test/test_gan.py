@@ -7,8 +7,9 @@ Peter J. Thomas
 """
 import tensorflow as tf
 
-import os
 import argparse
+import os
+import sqlite3
 
 from loss.loss import DRAGANLoss
 from models.dragan.generator import SRResNet
@@ -138,6 +139,18 @@ def main(flags):
     logdir = flags.logdir
     writer = tf.summary.create_file_writer(flags.logdir)
 
+    # retrieve list of tags from sqlite database
+    if flags.sqlite_database:
+        sqlite_connection = sqlite3.connect(flags.sqlite_database)
+        cursor.execute("select * from image_tags")
+        row = cursor.fetchone()
+        tag_list = row.keys()
+
+    # If not sqlite database is provided, make a list of integers iterating
+    # up to the number of tags
+    else:
+        tag_list = [*range(flags.num_tags)]
+
     with writer.as_default():
 
         # Initiate training loop
@@ -162,18 +175,18 @@ def main(flags):
 
                 # Feed real data through discriminator and retrieve output
                 # forgery scores as well as label confidences
-                y_real, real_tags_confidences = discriminator(real_images, step=step)
+                y_real, tag_scores_real = discriminator(real_images, step=step)
 
                 # Do the same with generated images
-                y_gen, gen_tags_confidences = discriminator(gen_images, step=step)
+                y_gen, tag_scores_gen = discriminator(gen_images, step=step)
 
                 # Calculate the losses for the generator and the discriminator
                 discriminator_loss, generator_loss = dragan_loss(real_images,
                                                                  gen_images,
                                                                  y_real,
                                                                  y_gen,
-                                                                 real_tags_confidences,
-                                                                 gen_tags_confidences,
+                                                                 tag_scores_real,
+                                                                 tag_scores_gen,
                                                                  real_tags,
                                                                  gen_tags)
 
@@ -198,17 +211,29 @@ def main(flags):
                                       running_generator_loss / 1000,
                                       epoch * len(train_real_data_generator) + step)
 
+                    # Select a real image and a generated image to plot, as well
+                    # as associated forgery scores and tag confidences
+                    real_image_plt = real_image[0,:,:,:]
+                    gen_image_plt = gen_image[0,:,:,:]
+                    y_real_plt = y_real[0]
+                    y_gen_plt = y_gen[0]
+                    tag_scores_real_plt = tag_scores_real[0,:]
+                    tag_scores_gen_plt = tag_scores_gen[0,:]
+                    real_tags_plt = real_tags_plt[0,:]
+                    gen_tags_plt = gen_rags_plt[0,:]
+
                     # log figure displaying discriminator's predictions on a real image
                     # as well as predictions on a generated image
                     writer.add_figure('real image vs. generated image',
-                                      plot_images(
-
-
-
-
-
-
-
+                                      plot_images(real_image_plt,
+                                                  gen_image_plt,
+                                                  y_real_plt,
+                                                  y_gen_plt,
+                                                  tag_scores_real_plt,
+                                                  tag_scores_gen_plt,
+                                                  real_tags_plt,
+                                                  gen_tags_plt,
+                                                  )
 
 
 
