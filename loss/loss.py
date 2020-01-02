@@ -51,7 +51,7 @@ class DRAGANLoss(object):
 
         # Check to see if the batch size of the real sample is the same
         # as the generated sample
-        assert batch_size = tf.shape(y_pred_generated)[0]
+        assert batch_size == tf.shape(y_pred_generated)[0]
 
         log_loss = tf.math.reduce_sum(tf.math.log(y_pred_real + offset) + \
                                       tf.math.log(1 - y_pred_generated + offset))
@@ -175,7 +175,7 @@ class DRAGANLoss(object):
 
     def __call__(self,
                  x_real,
-                 gen_images,
+                 x_gen,
                  y_real,
                  y_gen,
                  class_confidences_real,
@@ -186,7 +186,7 @@ class DRAGANLoss(object):
         """
         When DRAGANLoss object is called, return loss values for discriminator and generator
         """
-        discriminator_loss, generator_loss = self.loss(x_real, gen_images, y_real, y_gen,
+        discriminator_loss, generator_loss = self.loss(x_real, x_gen, y_real, y_gen,
                                                        class_confidences_real, class_confidences_gen,
                                                        truth_class_real, assigned_classes_gen)
 
