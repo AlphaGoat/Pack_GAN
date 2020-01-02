@@ -14,7 +14,7 @@ import tensorflow as tf
 
 from models.layers import WeightVariable, BiasVariable, BatchNormalization
 
-class Generator(object):
+class SRResNet(object):
 
     def __init__(self,
                  image_width,
