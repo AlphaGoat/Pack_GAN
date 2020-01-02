@@ -21,6 +21,7 @@ class DatasetGenerator(object):
                  batch_size=4,
                  num_threads=1,
                  buffer=30,
+                 label_smoothing=False,
                  encoding_function=None,
                  return_filename=False):
         """
@@ -43,6 +44,7 @@ class DatasetGenerator(object):
         self.batch_size = batch_size
         self.num_threads = num_threads
         self.buffer = buffer
+        self.label_smoothing = label_smoothing
         self.encoding_function = encoding_function
         self.return_filename = return_filename
         self.dataset = self.build_pipeline(tfrecord_name,
@@ -76,6 +78,10 @@ class DatasetGenerator(object):
         #       to apply to input imagery
         # if augment: write some augmentation code here
 
+        # label smoothing: if selected, convert '1.0' labels to '0.9'
+        if self.label_smoothing:
+            data = data.map(lambda image, tag: (image, 0.9 * tag))
+
         # If the destination network requires a special encoding (or
         # we would like to apply our own to try to lower the complexity
         # of the generation problem, do that here
@@ -105,7 +111,7 @@ class DatasetGenerator(object):
         # Define how to parse the example
         features = {
             'image/encoded': tf.VarLenFeature(dtype=tf.string),
-            'image/width': tf.FixedLenFEature([], dtype=tf.int64),
+            'image/width': tf.FixedLenFeature([], dtype=tf.int64),
             'image/height': tf.FixedLenFeature([], dtype=tf.int64),
             'image/tags': tf.FixedLenFeature([], dtype=tf.int64),
             'image/filename': tf.VarLenFeature([], dtype=tf.string),
