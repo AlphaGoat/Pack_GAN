@@ -16,7 +16,7 @@ class NoiseGenerator(object):
                  latent_space_vector_dim,
                  batch_size=4,
                  num_threads=1,
-                 prefetch_batch_buffer=30,
+                 buffer=30,
                  encoding_function=None,
                  ):
 
@@ -27,12 +27,23 @@ class NoiseGenerator(object):
         self.latent_space_vector_dim = latent_space_vector_dim
         self.batch_size = batch_size
         self.num_threads = num_threads
-        self.prefetch_batch_buffer = prefetch_batch_buffer
+        self.buffer = buffer
         self.encoding_function = encoding_function
 
+        # build noise pipeline
+        self.dataset = self.build_pipeline(self.batch_size,
+                                           self.latent_space_vector_dim,
+                                           self.num_tags,
+                                           self.num_threads,
+                                           self.buffer,
+                                           )
+
     def build_pipeline(self,
+                       batch_size,
                        latent_space_vector_dim,
                        num_tags,
+                       num_threads,
+                       buffer,
                        preprocess=False,
                        ):
 
@@ -44,14 +55,16 @@ class NoiseGenerator(object):
             # TODO: add preprocessing steps, if you think that is necessary
             pass
 
+        if self.encoding_function is not None:
+            data = data.map(self.encoding_function, num_parallel_calls=num_threads)
+
         data = data.repeat()
 
         # batch data
         data = data.batch(batch_size)
 
-
-
-
+        # prefetch with multiple threads
+        data.prefetch(buffer_size=buffer)
 
 
     def generate_random_noise(self, latent_space_vector_dim, num_tags):
