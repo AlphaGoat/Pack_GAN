@@ -37,9 +37,11 @@ def main(flags):
     train_real_data_generator = DatasetGenerator(train_tfrecord_name,
                                                  num_train_images,
                                                  batch_size=train_batch_size,
+                                                 label_smoothing=flags.label_smoothing,
                                                  num_threads=1,
                                                  buffer=30,
                                                  return_filename=False)
+    train_iterator = train_real_data_generator.get_iterator()
 
     valid_real_data_generator = DatasetGenerator(valid_tfrecord_name,
                                                  num_valid_images,
@@ -47,6 +49,7 @@ def main(flags):
                                                  num_threads=1,
                                                  buffer=30,
                                                  return_filename=False)
+    valid_iterator = valid_real_data_generator.get_iterator()
 
     test_real_data_generator = DatasetGenerator(test_tfrecord_name,
                                                  num_test_images,
@@ -54,6 +57,7 @@ def main(flags):
                                                  num_threads=1,
                                                  buffer=30,
                                                  return_filename=False)
+    test_iterator = test_real_data_generator.get_iterator()
 
     # Initialize Discriminator and Generator models
 
@@ -100,14 +104,36 @@ def main(flags):
     dragan_loss = DRAGANLoss(adv_balance_factor=adversarial_balance_factor,
                              gp_balance_factor=gradient_penalty_balance_factor)
 
-    # Initialize optimization function
-    learning_rate = flags.learning_rate
-    momentum = flags.momentum
-    nesterov = flags.nesterov
+    # Initialize optimization function for Generator
+    generator_optimizer = tf.optimizers.SGD(learning_rate=flags.gan_learning_rate,
+                                            momentum=flags.gan_momentum,
+                                            nesterov=flags.gan_nesterov)
 
-    sgd_optimizer = tf.optimizers.SGD(learning_rate=learning_rate,
-                                      momentum=momentum,
-                                      nesterov=nesterov)
+    # Initialize optimization function for Discriminator
+    discriminator_optimizer = tf.optimizers.SGD(learning_rate=flags.discriminator_learning_rate,
+                                                momentum=flags.discriminator_momentum,
+                                                nesterov=flags.discriminator_nesterov)
+
+    # Initialize summary writer
+    logdir = flags.logdir
+    writer = tf.summary.create_file_writer(flags.logdir)
+
+    with writer.as_default():
+
+        # Initiate training loop
+        for epoch in range(flags.num_epochs):
+
+            for step in range(len(train_real_data_generator)):
+
+                # Retrieve next batch of imagery
+                train_batch = train_iterator.get_next()
+
+                images, tags = train_batch[0], train_batch[1]
+
+
+
+
+
 
 
 
