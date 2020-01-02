@@ -91,41 +91,47 @@ def main(flags):
     else:
         latent_space_vector_dim = image_width
 
-    # fetch the number of tags we will use to label/generate imagery
-    num_tags = flags.num_tags
-
     generator = Generator(image_width,
-                                 image_height,
-                                 image_channels,
-                                 latent_space_vector_dim,
-                                 num_tags,
-                                 variable_summary_update_freq=parameter_summary_update_freq,
-                                 )
+                          image_height,
+                          image_channels,
+                          latent_space_vector_dim,
+                          flags.num_tags,
+                          variable_summary_update_freq=parameter_summary_update_freq,
+                          )
 
     discriminator = Discriminator(image_width,
-                                         image_height,
-                                         image_channels,
-                                         num_tags,
-                                         variable_summary_update_freq=parameter_summary_update_freq,
-                                         )
-
-    # Unpack balance factors for loss function
-    adversarial_balance_factor = flags.adversarial_balance_factor
-    gradient_penalty_balance_factor = flags.gradient_penalty_balance_factor
+                                  image_height,
+                                  image_channels,
+                                  flags.num_tags,
+                                  variable_summary_update_freq=parameter_summary_update_freq,
+                                  )
 
     # Initialize Loss function
-    dragan_loss = DRAGANLoss(adv_balance_factor=adversarial_balance_factor,
-                             gp_balance_factor=gradient_penalty_balance_factor)
+    dragan_loss = DRAGANLoss(adv_balance_factor=flags.adversarial_balance_factor,
+                             gp_balance_factor=flags.gradient_penalty_balance_factor)
+
+    # Implement expontential learning rate decay after specified number of  iterations training
+    gan_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.gan_learning_rate,
+                                                                          decay_steps=flags.decay_steps,
+                                                                          decay_rate=flags.decay_rate,
+                                                                          )
+
+    discriminator_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.discriminator_learning_rate,
+                                                                                    decay_steps=flags.decay_steps,
+                                                                                    decay_rate=flags.decay_rate,
+                                                                                    )
 
     # Initialize optimization function for Generator
-    generator_optimizer = tf.optimizers.SGD(learning_rate=flags.gan_learning_rate,
-                                            momentum=flags.gan_momentum,
-                                            nesterov=flags.gan_nesterov)
+    generator_optimizer = tf.optimizers.Adam(learning_rate=gan_learning_rate_schedule,
+                                             beta_1=flags.gan_beta1,
+                                             beta_2=flags.gan_beta2)
 
     # Initialize optimization function for Discriminator
-    discriminator_optimizer = tf.optimizers.SGD(learning_rate=flags.discriminator_learning_rate,
-                                                momentum=flags.discriminator_momentum,
-                                                nesterov=flags.discriminator_nesterov)
+    discriminator_optimizer = tf.optimizers.Adam(learning_rate=discriminator_learning_rate_schedule,
+                                                 beta_1=flags.discriminator_beta1,
+                                                 beta_2=flags.discriminator_beta2)
+
+
 
     # Initialize summary writer
     logdir = flags.logdir
@@ -167,6 +173,11 @@ def main(flags):
                                                                  gen_tags_confidences,
                                                                  real_tags,
                                                                  gen_tags)
+
+                # Perform optimization of both model's parameters
+                discriminator_optimizer.minimize(discriminator_loss)
+
+                generator_optimizer.minimize(generator_loss)
 
 
 
