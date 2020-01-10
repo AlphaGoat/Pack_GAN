@@ -166,11 +166,14 @@ if __name__ == '__main__':
     # If a data directory for the specific subreddit we are collecting for doesn't exist,
     # make it
     if not os.path.isdir(data_path):
-        os.mkdir(data_path, exist_ok=True)
+        os.mkdir(data_path)
 
     # open sqlite database for data scraped from this subreddit, or initialize
     # a new one if one for this subreddit hasn't been initialized yet
     print("sqlite database path: ", os.path.join(data_path, subreddit + '.sqlite3'))
+
+    # NOTE: this is only a temporary solution! find out why the database can't be written
+    #       to the external hard drive!
     with sqlite3.connect(os.path.join(data_path, subreddit, '.sqlite3')) as conn:
         #subreddit_db = sqlite3.connect(os.path.join(data_path, subreddit, '.sqlite3'))
         cursor = conn.cursor()

@@ -344,6 +344,12 @@ class SRResNet(object):
 
         return pix_shuffle_x2_output
 
+    def __call__(self, x, step=0):
+        """
+        When model is called like a function, initiate forward pass
+        """
+        return self.forward_pass(x, step=step)
+
 #    @tf.function
 #    def pixel_shuffle_x2_layer(self, input_fm):
 #        """

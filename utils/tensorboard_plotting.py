@@ -6,9 +6,8 @@ Peter J. Thomas
 02 Jan 2020 (Happy New Years!)
 """
 
-import maplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 
 def plot_images(real_image,
                 gen_image,

@@ -35,6 +35,7 @@ class DRAGANLoss(object):
     def adversarial_discriminator_loss(self,
                                        y_pred_real,
                                        y_pred_generated,
+                                       offset=1e-8
                                        ):
         """
         Calculates the log of the scores the discriminator assigns to real imagery
@@ -74,13 +75,13 @@ class DRAGANLoss(object):
 
         return log_loss
 
-    def cls_loss(self,
-                 pred_cls_real,
-                 pred_cls_gen,
-                 truth_cls_real,
-                 assigned_cls_gen,
-                 offset=1e-8,
-                 ):
+    def class_loss(self,
+                   pred_cls_real,
+                   pred_cls_gen,
+                   truth_cls_real,
+                   assigned_cls_gen,
+                   offset=1e-8,
+                   ):
         """
         Classification loss for discriminator
 
@@ -95,17 +96,18 @@ class DRAGANLoss(object):
         real_component =  (truth_cls_real) * tf.math.log(pred_cls_real + offset) + \
             (1 - truth_cls_real) * tf.math.log(1 - pred_cls_real + offset)
 
-        gen_component =  (assigned_cls_gen) * tf.math.log(pred_cls_gen + offset) + \
-                                          (1 - assigned_cls_gen) * tf.math.log(pred_cls_gen + offset))
+        gen_component =  -(assigned_cls_gen) * tf.math.log(pred_cls_gen + offset) + \
+                                          (1 - assigned_cls_gen) * tf.math.log(pred_cls_gen + offset)
 
         batch_size = tf.shape(real_component)[0]
 
         # Ensure that the batch size of the real sample is the same as the generated sample
         assert batch_size == tf.shape(gen_component)[0]
 
-        loss = (1/ batch_size) * (real_component + gen_component)
+        real_component = (1/batch_size) * real_component
+        gen_component = (1/batch_size) * gen_component
 
-        return cls_loss
+        return real_component, gen_component
 
     def gradient_penalty(self, x_real, gen_images, y_real, y_gen, offset=1e-8):
         """
@@ -114,7 +116,7 @@ class DRAGANLoss(object):
         # Get the batch size and check that it is the same between the real data distribution
         # and the generated distribution
         batch_size = tf.shape(x_real)[0]
-        assert batch_size = tf.shape(gen_images)[0]
+        assert batch_size == tf.shape(gen_images)[0]
 
         # randomly sample members of the 'real' data distribution and noise (generated images)
 #        flat_x = tf.reshape(x_real, [batch_size, -1])
@@ -128,7 +130,7 @@ class DRAGANLoss(object):
 
         # sample from this distribution. Use the returned indices to gather elements
         # from the combined real and generated distribution
-        sampled_indices = tf.random.categorical(flipped_distribution, batch_size)
+        sampled_indices = tf.random.categorical(probability_dist, batch_size)
         sampled_distribution = tf.gather(combined_distribution, sampled_indices)
 
         # Gather discriminator outputs for the sampled input distribution
@@ -159,17 +161,20 @@ class DRAGANLoss(object):
         # Calculating the discriminator loss
         adv_discrim_loss = self.adversarial_discriminator_loss(y_real, y_gen)
         adv_gen_loss = self.adversarial_generator_loss(y_gen)
-        d_cls_loss = -g_cls_loss = self.cls_loss(class_confidences_real,
-                                                 class_confidences_gen,
-                                                 truth_class_real,
-                                                 assigned_classes_gen)
+        cls_loss_real, cls_gen_loss =  self.class_loss(class_confidences_real,
+                                                       class_confidences_gen,
+                                                       truth_classes_real,
+                                                       assigned_classes_gen)
+
+        cls_discrim_loss = cls_loss_real - cls_gen_loss
+
 
         # calculate gradient penalty term
         grad_penalty = self.gradient_penalty(x_real, gen_images, y_real, y_gen)
 
         # calculate full loss terms for the generator and discriminator
-        discriminator_loss = d_cls_loss + (self.adv_lambda * d_adv_loss) + (self.gp_lambda * gradient_penalty)
-        generator_loss = g_cls_loss + (self.adv_lambda * g_adv_loss)
+        discriminator_loss = cls_discrim_loss + (self.adv_lambda * adv_discrim_loss) + (self.gp_lambda * grad_penalty)
+        generator_loss = cls_gen_loss + (self.adv_lambda * adv_gen_loss)
 
         return discriminator_loss, generator_loss
 
@@ -188,6 +193,6 @@ class DRAGANLoss(object):
         """
         discriminator_loss, generator_loss = self.loss(x_real, x_gen, y_real, y_gen,
                                                        class_confidences_real, class_confidences_gen,
-                                                       truth_class_real, assigned_classes_gen)
+                                                       truth_classes_real, assigned_classes_gen)
 
         return discriminator_loss, generator_loss

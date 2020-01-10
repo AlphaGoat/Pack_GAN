@@ -11,7 +11,7 @@ Peter J. Thomas
 """
 import tensorflow as tf
 
-from layers import WeightVariable, BiasVariable
+from models.layers import WeightVariable, BiasVariable
 
 class Discriminator(object):
 
@@ -493,38 +493,9 @@ class Discriminator(object):
         # tag_confidences: (batch_size, num_tags)
         return forgery_score, tag_confidences
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def __call_(self, x, step=0):
+        """
+        When model is called like a function, initiate forward pass
+        """
+        return self.forward_pass(x, step=step)
 

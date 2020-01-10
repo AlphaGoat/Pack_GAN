@@ -10,7 +10,6 @@ github handle: ianwmcquaid
 """
 
 import tensorflow as tf
-import numpy as np
 
 class DatasetGenerator(object):
 
@@ -110,29 +109,31 @@ class DatasetGenerator(object):
 
         # Define how to parse the example
         features = {
-            'image/encoded': tf.VarLenFeature(dtype=tf.string),
-            'image/width': tf.FixedLenFeature([], dtype=tf.int64),
-            'image/height': tf.FixedLenFeature([], dtype=tf.int64),
-            'image/tags': tf.FixedLenFeature([], dtype=tf.int64),
-            'image/filename': tf.VarLenFeature([], dtype=tf.string),
-            'image/format': tf.VarLenFeature([], dtype=tf.string)
+            'image/encoded': tf.io.VarLenFeature(dtype=tf.string),
+            'image/width': tf.io.FixedLenFeature([], dtype=tf.int64),
+            'image/height': tf.io.FixedLenFeature([], dtype=tf.int64),
+            'image/tags': tf.io.FixedLenFeature([], dtype=tf.int64),
+            'image/filename': tf.io.VarLenFeature(dtype=tf.string),
+            'image/format': tf.io.VarLenFeature(dtype=tf.string),
         }
+        # TODO: verify that the string values collected in the features above
+        #       (filename/format) are read out correctly
 
         # Parse the example
-        features_parsed = tf.parse_single_example(serialized=example_proto,
-                                                  feature=features)
+        features_parsed = tf.io.parse_single_example(serialized=example_proto,
+                                                  features=features)
         width = tf.cast(features_parsed['image/width'], tf.float32)
         height = tf.cast(features_parsed['image/height'], tf.float32)
 
-        filename = tf.cast(tf.sparse_tensor_to_dense(features_parsed['image/filename'], default_value=""),
-                           tf.string)
-        image_format = tf.cast(tf.sparse_tensor_to_dense(features_parsed['image/format'], default_value=""),
-                               tf.string)
-        tags = tf.cast(tf.sparse_tensor_to_dense(features_parsed['image/tags']), tf.float32)
+        filename = tf.cast(features_parsed['image/filename'], tf.string)
+        image_format = tf.cast(features_parsed['image/format'], tf.string)
+        tf.print("(pjt) filename: ", filename)
+        tf.print("(pjt) image_format: ", image_format)
+        tags = tf.cast(features_parsed['image/tags'], tf.float32)
 
         # Decode imagery from raw bytes
-        images = tf.sparse_tensor_to_dense(features_parsed['image/raw'], default_value="")
-        images = tf.decode_raw(images, tf.uint16)
+        images = tf.sparse.to_dense(features_parsed['image/encoded'], default_value="")
+        images = tf.io.decode_raw(images, tf.uint16)
         images = tf.reshape(images, [height, width, self.num_channels])
 
         # Normalize the images pixels to zero mean and unit variance
@@ -143,10 +144,11 @@ class DatasetGenerator(object):
         else:
             return images, tags
 
-    def get_iterator(self):
+    def get_batch(self):
         # Create and return iterator
         print("Got here")
-        return self.dataset.make_one_shot_iterator()
+        #return self.dataset.make_one_shot_iterator()
+        return self.dataset.batch(self.batch_size)
 
 
 
