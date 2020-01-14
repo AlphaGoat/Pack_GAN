@@ -46,21 +46,21 @@ def pull_data_from_sqlite_database(flags):
 
     # pull train image data
     cursor.execute('''
-            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            SELECT image_id, file_name, image_height, image_width, image_channels FROM {0}_metadata
             WHERE ID IN {1}'''.format(flags.subreddit, train_ids))
 
     train_rows = cursor.fetch_all()
 
     # repeat with validation data
     cursor.execute('''
-            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            SELECT image_id, file_name, image_height, image_width, image_channels FROM {0}_metadata
             WHERE ID IN {1}'''.format(flags.subreddit, valid_ids))
 
     valid_rows = cursor.fetch_all()
 
     # and test data
     cursor.execute('''
-            SELECT image_id, file_name, image_height, image_width FROM {0}_metadata
+            SELECT image_id, file_name, image_height, image_width, image_channels FROM {0}_metadata
             WHERE ID IN {1}'''.format(flags.subreddit, test_ids))
 
     test_rows = cursor.fetch_all()
@@ -90,6 +90,7 @@ def pull_data_from_sqlite_database(flags):
             #file_path = os.path.join(db_path, file_name)
             image_height = row[2]
             image_width = row[3]
+            image_channels = row[4]
 
             # Retrieve tags for image
             cursor.execute('''SELECT * FROM image_tags WHERE image_id=?''', (image_id))
@@ -102,6 +103,7 @@ def pull_data_from_sqlite_database(flags):
                 'image_id': image_id,
                 'height': image_height,
                 'width': image_width,
+                'channels': image_channels,
                 'tags': tags,
                         }
 
@@ -182,6 +184,7 @@ def convert_to_tfrecords(data_dict, flags):
     'image/id': _int64_feature(data_dict['image_id']),
     'image/height': _int64_feature(data_dict['height']),
     'image/width': _int64_feature(data_dict['width']),
+    'image/channels': _int64_feature(data_dict['channels']),
     'image/tags': _int64_list_feature(data_dict['tags']),
     }))
 
@@ -262,7 +265,8 @@ if __name__ == '__main__':
             'image_id': 0,
             'height': 720,
             'width': 801,
-            'tags': [0, 37],
+            'channels': 3,
+            'tags': [1, 0, 1, 0],
         }
 
         flags.datapath = "/home/alphagoat/Projects/PACK_GAN/data/"
