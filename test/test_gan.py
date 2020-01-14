@@ -44,35 +44,38 @@ def main(flags):
     train_data_generator = DatasetGenerator(train_tfrecord_name,
                                             num_train_images,
                                             num_channels,
+                                            flags.num_tags,
                                             batch_size=flags.train_batch_size,
                                             label_smoothing=flags.label_smoothing,
                                             num_threads=1,
-                                            buffer=30,
+                                            buffer_size=30,
                                             return_filename=False)
 
-    #train_iterator = train_data_generator.get_iterator()
+#    train_iterator = train_data_generator.get_iterator()
 
     valid_data_generator = DatasetGenerator(valid_tfrecord_name,
                                             num_valid_images,
                                             num_channels,
+                                            flags.num_tags,
                                             batch_size=flags.valid_batch_size,
                                             num_threads=1,
-                                            buffer=30,
+                                            buffer_size=30,
                                             return_filename=False)
 
-    #valid_iterator = valid_data_generator.get_iterator()
+#    valid_iterator = valid_data_generator.get_iterator()
 
     # Initialize testing data generator only if
     if flags.test_tfrecord:
         test_data_generator = DatasetGenerator(test_tfrecord_name,
                                                num_test_images,
                                                num_channels,
+                                               flags.num_tags,
                                                batch_size=flags.test_batch_size,
                                                num_threads=1,
-                                               buffer=30,
+                                               buffer_size=30,
                                                return_filename=False)
 
-        #test_iterator = test_data_generator.get_iterator()
+#        test_iterator = test_data_generator.get_iterator()
 
 
     # Initialize noise generator
@@ -85,7 +88,7 @@ def main(flags):
                                      num_threads=1,
                                      buffer=30)
 
-    noise_iterator = noise_generator.get_iterator()
+#    noise_iterator = noise_generator.get_iterator()
 
     # Initialize Discriminator and Generator models
 
@@ -122,23 +125,28 @@ def main(flags):
                              gp_balance_factor=flags.gradient_penalty_balance_factor)
 
     # Implement expontential learning rate decay after specified number of  iterations training
-    gan_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.learning_rate,
+    learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.learning_rate,
                                                                           decay_steps=flags.decay_steps,
                                                                           decay_rate=flags.decay_rate,
                                                                           )
 
-    discriminator_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.learning_rate,
-                                                                                    decay_steps=flags.decay_steps,
-                                                                                    decay_rate=flags.decay_rate,
-                                                                                    )
+#    gan_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.learning_rate,
+#                                                                          decay_steps=flags.decay_steps,
+#                                                                          decay_rate=flags.decay_rate,
+#                                                                          )
+#
+#    discriminator_learning_rate_schedule = tf.optimizers.schedules.ExponentialDecay(flags.learning_rate,
+#                                                                                    decay_steps=flags.decay_steps,
+#                                                                                    decay_rate=flags.decay_rate,
+#                                                                                    )
 
     # Initialize optimization function for Generator
-    generator_optimizer = tf.optimizers.Adam(learning_rate=gan_learning_rate_schedule,
+    generator_optimizer = tf.optimizers.Adam(learning_rate=learning_rate_schedule,
                                              beta_1=flags.beta1,
                                              beta_2=flags.beta2)
 
     # Initialize optimization function for Discriminator
-    discriminator_optimizer = tf.optimizers.Adam(learning_rate=discriminator_learning_rate_schedule,
+    discriminator_optimizer = tf.optimizers.Adam(learning_rate=learning_rate_schedule,
                                                  beta_1=flags.beta1,
                                                  beta_2=flags.beta2)
 
@@ -174,12 +182,12 @@ def main(flags):
             for step in range(len(train_data_generator)):
 
                 # Retrieve next batch of real imagery
-                #train_batch = train_iterator.get_next()
-                train_batch = train_data_generator.get_batch()
+#                train_batch = train_iterator.get_next()
+                train_batch = next(iter(train_data_generator.get_batch()))
                 real_images, real_tags = train_batch[0], train_batch[1]
 
                 # Retrieve seed for Generator
-                latent_space_noise, gen_tags = noise_iterator.get_next()
+                latent_space_noise, gen_tags = next(iter(noise_generator.get_batch()))
 
                 # concatenate latent space noise and tag vector to feed into generator
                 gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
@@ -266,7 +274,7 @@ def main(flags):
                 real_images, real_tags = valid_batch[0], valid_batch[1]
 
                 # Retrieve seed for Generator
-                latent_space_noise, gen_tags = noise_iterator.get_next()
+                latent_space_noise, gen_tags = noise_generator.get_batch()
 
                 # concatenate latent space noise and tag vector to feed into generator
                 gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
@@ -345,7 +353,7 @@ def main(flags):
                 real_images, real_tags = test_batch[0], test_batch[1]
 
                 # Retrieve seed for Generator
-                latent_space_noise, gen_tags = noise_iterator.get_next()
+                latent_space_noise, gen_tags = noise_generator.get_batch()
 
                 # concatenate latent space noise and tag vector to feed into generator
                 gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
@@ -423,6 +431,11 @@ if __name__ == '__main__':
     parser.add_argument('--num_tags', type=int,
                         default=34,
                         help="Number of tags to assign to generated imagery")
+
+    parser.add_argument('--learning_rate', type=float,
+                        default=2e-4,
+                        help="Learning rate for models"
+                        )
 
     parser.add_argument('--decay_steps', type=int,
                         default=50e3,
