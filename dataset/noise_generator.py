@@ -47,8 +47,9 @@ class NoiseGenerator(object):
                        preprocess=False,
                        ):
 
-        data = tf.data.Dataset.from_generator(self.generate_random_noise(
-            latent_space_vector_dim, num_tags))
+        data = tf.data.Dataset.from_generator(self.generate_random_noise,
+                                             (tf.float32, tf.float32),
+                                             (latent_space_vector_dim, num_tags))
 
         # Perform additional preprocessing to generated noise
         if preprocess:
@@ -66,8 +67,7 @@ class NoiseGenerator(object):
         # prefetch with multiple threads
         data.prefetch(buffer_size=buffer)
 
-
-    def generate_random_noise(self, latent_space_vector_dim, num_tags):
+    def generate_random_noise(self):
         """
         :param latent_space_vector_dim: dimension of vector randomly
                                         sampled from latent space
@@ -86,20 +86,17 @@ class NoiseGenerator(object):
                                      of what tags we randomly assigned to the
                                      tensor we generate from latent space
         """
-        latent_space_image_noise = tf.random.uniform((latent_space_vector_dim,),
+        latent_space_image_noise = tf.random.uniform((self.latent_space_vector_dim,),
                                                      minval=-1.0, maxval=1.0,
                                                      dtype=tf.dtypes.float32)
 
-        latent_space_tag_noise = tf.random.uniform((num_tags,),
+        latent_space_tag_noise = tf.random.uniform((self.num_tags,),
                                                    minval=-1.0, maxval=1.0,
                                                    dtype=tf.dtypes.float32)
 
-        return latent_space_image_noise, latent_space_tag_noise
+        yield latent_space_image_noise, latent_space_tag_noise
 
-
-
-
-    def get_iterator(self):
+    def get_batch(self):
         # Create and return iterator
-        return self.dataset.make_one_shot_iterator()
+        return self.dataset.batch(self.batch_size)
 

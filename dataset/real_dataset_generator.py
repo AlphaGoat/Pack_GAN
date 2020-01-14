@@ -10,6 +10,7 @@ github handle: ianwmcquaid
 """
 
 import tensorflow as tf
+import numpy as np
 
 class DatasetGenerator(object):
 
@@ -17,9 +18,10 @@ class DatasetGenerator(object):
                  tfrecord_name,
                  num_images,
                  num_channels,
+                 num_tags,
                  batch_size=4,
                  num_threads=1,
-                 buffer=30,
+                 buffer_size=30,
                  label_smoothing=False,
                  encoding_function=None,
                  return_filename=False):
@@ -40,22 +42,23 @@ class DatasetGenerator(object):
         self.tfrecord_name = tfrecord_name
         self.num_images = num_images
         self.num_channels = num_channels
+        self.num_tags = num_tags
         self.batch_size = batch_size
         self.num_threads = num_threads
-        self.buffer = buffer
+        self.buffer_size = buffer_size
         self.label_smoothing = label_smoothing
         self.encoding_function = encoding_function
         self.return_filename = return_filename
         self.dataset = self.build_pipeline(tfrecord_name,
                                            batch_size,
                                            self.num_threads,
-                                           self.buffer)
+                                           self.buffer_size)
 
     def build_pipeline(self,
                        tfrecord_path,
                        batch_size,
                        num_threads,
-                       buffer,
+                       buffer_size,
                        augment=False,
                        cache_dataset_memory=False,
                        cache_dataset_file=False,
@@ -98,21 +101,33 @@ class DatasetGenerator(object):
         data = data.batch(batch_size)
 
         # prefetch with multiple threads
-        data.prefetch(buffer_size=buffer)
+        data.prefetch(buffer_size=buffer_size)
 
         # TODO: finish building pipeline
 
         # return a reference to this data pipeline
         return data
 
+    def __len__(self):
+        """
+        The "length" of the generator is the number of batches expected.
+
+        :return: the expected number of batches that will be produced by this generator.
+        """
+        return int(np.ceil(self.num_images / self.batch_size))
+
+    def get_dataset(self):
+        return self.dataset
+
     def _parse_data(self, example_proto):
 
         # Define how to parse the example
         features = {
-            'image/encoded': tf.io.VarLenFeature(dtype=tf.string),
+            'image/raw': tf.io.FixedLenFeature([], dtype=tf.string),
             'image/width': tf.io.FixedLenFeature([], dtype=tf.int64),
             'image/height': tf.io.FixedLenFeature([], dtype=tf.int64),
-            'image/tags': tf.io.FixedLenFeature([], dtype=tf.int64),
+            'image/channels': tf.io.FixedLenFeature([], dtype=tf.int64),
+            'image/tags': tf.io.FixedLenFeature([self.num_tags], dtype=tf.int64),
             'image/filename': tf.io.VarLenFeature(dtype=tf.string),
             'image/format': tf.io.VarLenFeature(dtype=tf.string),
         }
@@ -122,19 +137,22 @@ class DatasetGenerator(object):
         # Parse the example
         features_parsed = tf.io.parse_single_example(serialized=example_proto,
                                                   features=features)
-        width = tf.cast(features_parsed['image/width'], tf.float32)
-        height = tf.cast(features_parsed['image/height'], tf.float32)
+        width = tf.cast(features_parsed['image/width'], tf.int64)
+        height = tf.cast(features_parsed['image/height'], tf.int64)
+        channels = tf.cast(features_parsed['image/channels'], tf.int64)
 
-        filename = tf.cast(features_parsed['image/filename'], tf.string)
-        image_format = tf.cast(features_parsed['image/format'], tf.string)
+        filename = tf.cast(tf.sparse.to_dense(features_parsed['image/filename']), tf.string)
+        image_format = tf.cast(tf.sparse.to_dense(features_parsed['image/format']), tf.string)
         tf.print("(pjt) filename: ", filename)
         tf.print("(pjt) image_format: ", image_format)
         tags = tf.cast(features_parsed['image/tags'], tf.float32)
 
         # Decode imagery from raw bytes
-        images = tf.sparse.to_dense(features_parsed['image/encoded'], default_value="")
-        images = tf.io.decode_raw(images, tf.uint16)
-        images = tf.reshape(images, [height, width, self.num_channels])
+#        images = tf.sparse.to_dense(features_parsed['image/raw'], default_value="")
+        image_raw = features_parsed['image/raw']
+#        tf.print("(pjt) image shape (flattened): ", tf.shape(images))
+        images = tf.io.decode_jpeg(image_raw, channels=channels)
+        images = tf.reshape(images, [height, width, channels])
 
         # Normalize the images pixels to zero mean and unit variance
         images = tf.image.per_image_standardization(images)
