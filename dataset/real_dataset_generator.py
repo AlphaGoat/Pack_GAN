@@ -163,16 +163,6 @@ class DatasetGenerator(object):
             return images, tags
 
     def get_batch(self):
-        # Create and return iterator
-        print("Got here")
         #return self.dataset.make_one_shot_iterator()
         return self.dataset.batch(self.batch_size)
-
-
-
-
-
-
-
-
 
