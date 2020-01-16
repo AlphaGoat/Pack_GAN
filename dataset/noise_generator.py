@@ -59,6 +59,9 @@ class NoiseGenerator(object):
         if self.encoding_function is not None:
             data = data.map(self.encoding_function, num_parallel_calls=num_threads)
 
+        # repeat dataset so that we can loop over previous values if we set
+        # a higher number of training examples than there are actual instances
+        # in the dataset
         data = data.repeat()
 
         # batch data

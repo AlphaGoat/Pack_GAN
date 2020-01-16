@@ -41,20 +41,15 @@ class SRResNet(object):
         # statistics about model parameters
         self.variable_summary_update_freq = variable_summary_update_freq
 
-    def residual_block(self):
+    def initialize_variables(self):
         """
-        resblock adopted from SRResNet.
-        The generator uses 16 of these
-        blocks in total
+        Pre-initializes all parameter matrices composing model
+        architecture
         """
-
-        #TODO: Conv Block
-        #TODO: Batch Normalization Layer
-        #TODO: ReLU Activation
-        #TODO: Conv Block
-        #TODO: Batch Normalization Layer
-        #TODO: Elementwise Sum layer
-        pass
+        noise_dim = self.latent_space_vector_dim + self.num_tags
+        self.W_fc1 = WeightVariable(shape=(noise_dim, 64 * 16 * 16),
+                                    name='W_fc1',
+                                    layer_scope=
 
     @tf.function
     def forward_pass(self, x, step=0):
@@ -313,7 +308,6 @@ class SRResNet(object):
 
             return output
 
-    @tf.function
     def pixel_shuffle_x2_layer(self, input_fm):
         """
         Applies pixel shuffling to upsampled feature map.
