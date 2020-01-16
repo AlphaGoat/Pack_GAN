@@ -172,7 +172,8 @@ class WeightVariable(object):
 
         # Variables to keep track of variable name space
         self.name = name
-        #self.model_scope = model_scope
+
+        # variable to keep track of the scope the variable falls under
         self.layer_scope = layer_scope
 
         # Update frequency for tensorboard summaries. If 'None',
@@ -185,12 +186,12 @@ class WeightVariable(object):
         else:
             self.initializer=initializer
 
-#        # initialize internal weight variable
-#        self.initialize_variable()
-
         # Internal step variable to pass to summaries
         self._counter = 0
 
+        # Initializer flag. If it is not set, then the
+        # variable has not been initialized
+        self._initialized = False
 
     def initialize_variable(self):
         # Initialize Weight Variable
@@ -201,27 +202,19 @@ class WeightVariable(object):
             dtype=tf.float32,
             )
 
-        #print("initial.name: ", initial.name)
-        #print("model_scope: ", self.model_scope)
-        #print("layer_scope: ", self.layer_scope)
-        #print("name: ", self.name)
-        #print("name we want: ", "{0}{1}:0".format(self.layer_scope, self.name))
-        #print("actual name of variable: ", initial.name)
-
         assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
 
         self.initial = initial
-        #variable_summaries(initial, self._counter)
 
-        #return initial
+        # Set initialization flag
+        self._initialized = True
 
     #@tf.function
     def __call__(self, step):
 
         # create summaries for updated weights
         self._counter = step
-        print("in WeightVariable, we are on step: ", step)
-        if self._counter == 0:
+        if not self._initialized:
             self.initialize_variable()
 
         if self._counter % self.summary_update_freq == 0:
@@ -229,29 +222,15 @@ class WeightVariable(object):
 
         return self.initial
 
-
-
-        #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
-#        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
-#            initial = tf.get_variable(self.name, self.shape,
-#                                      initializer=self.initializer,
-#                                      trainable=True)
-#            variable_summaries(initial)
-#
-#
-#        return initial
-#@tf.function
 class BiasVariable(object):
     """
     Base class for bias parameters to be used in learning layers
     """
-
     def __init__(self,
                  shape,
                  name,
-                 #model_scope,
                  layer_scope,
-                 initializer=None,
+                 initializer=tf.initializers.zeros,
                  summary_update_freq=1,
                  ):
 
@@ -260,23 +239,22 @@ class BiasVariable(object):
 
         # Variables keeping track of variable name space
         self.name = name
-        #self.model_scope = model_scope
+
+        # variable to keep track of the scope the variable falls under
         self.layer_scope = layer_scope
 
         # If no initializer is provided, initialize params as zeros
-        if not initializer:
-            self.initializer = tf.initializers.zeros
-        else:
-            self.initializer = initializer
+        self.initializer = initializer
 
         # Frequency with which to update tensorboard summaries
         self.summary_update_freq = summary_update_freq
 
-        # Initialize internal weight variable
-        #self.initialize_variable()
-
         # Internal step variable to pass to summaries
         self._counter = 0
+
+        # Initializer flag. If it is not set, then the
+        # variable has not been initialized
+        self._initialized = False
 
     def initialize_variable(self):
         # Initialize Weight Variable
@@ -288,38 +266,25 @@ class BiasVariable(object):
             dtype=tf.float32,
             )
 
-        #print("What name should be: ", "{0}/{1}/{2}:0".format(self.model_scope, self.layer_scope, self.name))
-        #print("initial name: ", initial.name)
-
         assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
 
         self.initial = initial
-        #variable_summaries(self.initial, self._counter)
 
-            #return initial
+        # set initialization flag
+        self._initialized = True
 
     #@tf.function
     def __call__(self, step):
 
         # Call variable_summaries for updated weights
         self._counter = step
-        if self._counter == 0:
+        if not self._initialized:
             self.initialize_variable()
 
         if self._counter % self.summary_update_freq == 0:
             variable_summaries(self.initial, self._counter)
 
         return self.initial
-
-        #       THE FOLLOWING INITIALIZATIONS ARE DEPRECATED IN TF 2.0:
-#        variable_summaries(initial)
-#        with tf.variable_scope(self.model_scope, reuse=tf.AUTO_REUSE):
-#            initial = tf.get_variable(self.name, self.shape,
-#                                      intiializer=self.initializer,
-#                                      trainable=True)
-#            variable_summaries(initial)
-#
-#        return initial
 
 class ResidualLayer(object):
     """

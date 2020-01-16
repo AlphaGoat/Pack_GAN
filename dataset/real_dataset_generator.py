@@ -95,6 +95,9 @@ class DatasetGenerator(object):
         elif cache_dataset_file:
             data = data.cache("./" + cache_name + "CACHE")
 
+        # repeat dataset so that we can loop over previous values if we set
+        # a higher number of training examples than there are actual instances
+        # in the dataset
         data = data.repeat()
 
         # batch the data
@@ -121,6 +124,8 @@ class DatasetGenerator(object):
 
     def _parse_data(self, example_proto):
 
+#        tf.print("example_proto: ", example_proto)
+
         # Define how to parse the example
         features = {
             'image/raw': tf.io.FixedLenFeature([], dtype=tf.string),
@@ -136,7 +141,7 @@ class DatasetGenerator(object):
 
         # Parse the example
         features_parsed = tf.io.parse_single_example(serialized=example_proto,
-                                                  features=features)
+                                                     features=features)
         width = tf.cast(features_parsed['image/width'], tf.int64)
         height = tf.cast(features_parsed['image/height'], tf.int64)
         channels = tf.cast(features_parsed['image/channels'], tf.int64)
@@ -145,13 +150,16 @@ class DatasetGenerator(object):
         image_format = tf.cast(tf.sparse.to_dense(features_parsed['image/format']), tf.string)
         tf.print("(pjt) filename: ", filename)
         tf.print("(pjt) image_format: ", image_format)
+        tf.print("(pjt) image width: ", width)
+        tf.print("(pjt) image height: ", height)
+        tf.print("(pjt) channels: ", channels)
         tags = tf.cast(features_parsed['image/tags'], tf.float32)
 
         # Decode imagery from raw bytes
 #        images = tf.sparse.to_dense(features_parsed['image/raw'], default_value="")
         image_raw = features_parsed['image/raw']
 #        tf.print("(pjt) image shape (flattened): ", tf.shape(images))
-        images = tf.io.decode_jpeg(image_raw, channels=channels)
+        images = tf.io.decode_jpeg(image_raw, channels=3)
         images = tf.reshape(images, [height, width, channels])
 
         # Normalize the images pixels to zero mean and unit variance

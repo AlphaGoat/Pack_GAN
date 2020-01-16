@@ -67,6 +67,8 @@ class NoiseGenerator(object):
         # prefetch with multiple threads
         data.prefetch(buffer_size=buffer)
 
+        return data
+
     def generate_random_noise(self):
         """
         :param latent_space_vector_dim: dimension of vector randomly

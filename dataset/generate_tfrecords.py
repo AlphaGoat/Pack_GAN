@@ -274,7 +274,6 @@ if __name__ == '__main__':
         save_path = os.path.join(flags.datapath, flags.subreddit, "single_example.tfrecords")
         with tf.io.TFRecordWriter(save_path) as tfrecord_writer:
             example = convert_to_tfrecords(data_dict, flags)
-            tf.print("serialized example: ", example)
             tfrecord_writer.write(example.SerializeToString())
 
     else:

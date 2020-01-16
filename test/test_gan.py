@@ -190,10 +190,10 @@ def main(flags):
                 latent_space_noise, gen_tags = next(iter(noise_generator.get_batch()))
 
                 # concatenate latent space noise and tag vector to feed into generator
-                gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
+                gen_input = tf.concat([latent_space_noise, gen_tags], axis=2)
 
                 # Now generate fake images
-                gen_images = generator(latent_space_noise, step=step)
+                gen_images = generator(gen_input, step=step)
 
                 # Feed real data through discriminator and retrieve output
                 # forgery scores as well as label confidences
