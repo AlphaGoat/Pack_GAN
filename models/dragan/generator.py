@@ -41,17 +41,16 @@ class SRResNet(object):
         # statistics about model parameters
         self.variable_summary_update_freq = variable_summary_update_freq
 
-    def initialize_variables(self):
-        """
-        Pre-initializes all parameter matrices composing model
-        architecture
-        """
-        noise_dim = self.latent_space_vector_dim + self.num_tags
-        self.W_fc1 = WeightVariable(shape=(noise_dim, 64 * 16 * 16),
-                                    name='W_fc1',
-                                    layer_scope=
-
-    @tf.function
+#    def initialize_variables(self):
+#        """
+#        Pre-initializes all parameter matrices composing model
+#        architecture
+#        """
+#        noise_dim = self.latent_space_vector_dim + self.num_tags
+#        self.W_fc1 = WeightVariable(shape=(noise_dim, 64 * 16 * 16),
+#                                    name='W_fc1',
+#                                    layer_scope=
+#
     def forward_pass(self, x, step=0):
         """
         Params:
@@ -116,122 +115,28 @@ class SRResNet(object):
             #       at the end of the following residual blocks as the last
             #       input
             # Shape: (batch_size, 16, 16, 64)
-            residual_input = re_out_fc1 = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
-
-            ####################################################
-            ##################  RESIDUAL LAYERS ################
-            ####################################################
+            x = residual_input = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
 
             # Initialize 16 Residual blocks
             for i in range(1, 17):
                 with tf.name_scope('residual_block{}'.format(i)) as layer_scope:
 
-                    # first 2-D Convolutional Layer:
-                    # Initializing filter for first conv layer
-                    kernel1_res = WeightVariable(shape=[3, 3, 64, 64],
-                                                 name='Filter1_resblock{}'.format(i),
-                                                 #model_scope=self.model_scope,
-                                                 layer_scope=layer_scope,
-                                                 initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                            stddev=0.02),
-                                                 summary_update_freq=self.variable_summary_update_freq,
-                                                )(step)
-                    # Initializing bias parameters for first conv layer
-                    bias1_res = BiasVariable(shape=(64,),
-                                             name='bias1_resblock{}'.format(i),
-                                             #model_scope=self.model_scope,
-                                             layer_scope=layer_scope,
-                                             initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                        stddev=0.02),
-                                             summary_update_freq=self.variable_summary_update_freq,
-                                             )(step)
-
-                    # output shape: (batch_size, 16, 16, 64)
-                    feature_map1_res = tf.nn.conv2d(residual_input,
-                                                    kernel1_res,
-                                                    strides=[1, 1, 1, 1],
-                                                    padding='SAME'
-                                                    )
-                    # batch_normalization
-                    # output shape: (batch_size, 16, 16, 64)
-                    batch_norm_feature_map_1 = tf.nn.batch_normalization(feature_map1_res,
-                                                                         mean=0.0,
-                                                                         variance=1.0,
-                                                                         offset=None,
-                                                                         scale=None,
-                                                                         variance_epsilon=0.001)
-
-                    # first activation
-                    # output shape: (batch_Size, 16, 16, 64)
-                    act_feature_map_1 = tf.nn.relu(batch_norm_feature_map_1)
-
-                    # 2nd 2-D Convolutional Layer:
-                    # initializing second filter
-                    kernel2_res = WeightVariable(shape=[3, 3, 64, 64],
-                                                 name='Filter2_resblock{}'.format(i),
-                                                 #model_scope=self.model_scope,
-                                                 layer_scope=layer_scope,
-                                                 initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                            stddev=0.02)
-                                                 )(step)
-                    bias2_res = BiasVariable(shape=(64,),
-                                             name='bias2_resblock{}'.format(i),
-                                             #model_scope=self.model_scope,
-                                             layer_scope=layer_scope,
-                                             initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                        stddev=0.02)
-                                             )(step)
-                    # output shape: (batch_size, 16, 16, 64)
-                    feature_map2_res = tf.nn.conv2d(act_feature_map_1,
-                                                    kernel2_res,
-                                                    strides=[1, 1, 1, 1],
-                                                    padding='SAME'
-                                                    )
-                    # Add bias tensor
-                    bias_feature_map2_res = tf.nn.bias_add(feature_map2_res, bias2_res)
-
-                    # batch_normalization
-                    # output shape: (batch_size, 16, 16, 64)
-                    batch_norm_feature_map2_res = tf.nn.batch_normalization(feature_map2_res,
-                                                                            mean=0.0,
-                                                                            variance=1.0,
-                                                                            offset=None,
-                                                                            scale=None,
-                                                                            variance_epsilon=0.001)
-
-                    # element-wise sum of output of second convolution with
-                    # original residual input
-                    # output shape: (batch_size, 16, 16, 64)
-                    residual_sum = tf.add(batch_norm_feature_map2_res, residual_input)
-
-                    # Final activation
-                    # NOTE: May remove this activation, not included in actual paper
-                    residual_input = residual_block_output = tf.nn.relu(residual_sum)
-
-            # Final residual sum
-            with tf.name_scope('final_residual_output'):
-
-                # Batch Normalization
-                # Shape: (batch_Size, 16, 16, 64)
-                batch_norm_residual_block_output = tf.nn.batch_normalization(residual_block_output,
-                                                                             mean=0.0,
-                                                                             variance=1.0,
-                                                                             offset=None,
-                                                                             scale=None,
-                                                                             variance_epsilon=0.001)
-
-                # ReLU Activation
-                # SHape: (batch_size, 16, 16, 64)
-                act_residual_block_output = tf.nn.relu(batch_norm_residual_block_output)
-
-                # Final element-wise sum, with original res block input (i.e., the output of the
-                # first fully-connected layer
-                # Shape: (batch_size, 16, 16, 64)
-                fm_intermediate = tf.add(act_residual_block_output, re_out_fc1)
-
-            ############################################################################
-            ######################### END RESIDUAL LAYERS ##############################
-            ############################################################################
+                    x = self.resblock(x,
+                                      filter_dims=[3, 3],
+                                      num_filters=64,
+                                      input_channels=64,
+                                      strides=[1, 1, 1, 1],
+                                      name="residual_block{}".format(i)
+                                      )
+             # Shape: (batch_Size, 16, 16, 64)
+            x = tf.nn.batch_normalization(x,
+                                          mean=0.0,
+                                          variance=1.0,
+                                          offset=None,
+                                          scale=None,
+                                          variance_epsilon=0.001)
+            x = tf.nn.relu(x)
+            x = tf.add(x, residual_input)
 
             # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
             #           x and y dimension and randomly shuffles pixels in those dimensions
@@ -239,74 +144,118 @@ class SRResNet(object):
                 with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
 
                     # Initializer filter and bias for upsampling convolution
-                    upscale_kernel = WeightVariable(shape=[3, 3, 64, 256],
-                                                    name='Filter1_PixelShuffle',
-                                                    #model_scope=self.model_scope,
-                                                    layer_scope=layer_scope,
-                                                    initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                               stddev=0.02)
-                                                    )(step)
-                    upscale_bias = BiasVariable(shape=(256,),
-                                                name='bias_PixelShuffle{}'.format(i),
-                                                #model_scope=self.model_scope,
-                                                layer_scope=layer_scope,
-                                                initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                           stddev=0.02)
-                                                )(step)
-
-                    # Output shape: (batch_size, 16, 16, 256)
-                    upscale_feature_map = tf.nn.conv2d(fm_intermediate,
-                                                       upscale_kernel,
-                                                       strides=[1, 1, 1, 1],
-                                                       padding='SAME'
-                                                       )
-
-                    # Perform pixel shuffling operation
-                    pix_shuffled_fm = self.pixel_shuffle_x2_layer(upscale_feature_map)
-
-                    # batch normalization and final activation
-                    bn_pix_shuffled_fm = tf.nn.batch_normalization(pix_shuffled_fm,
-                                                                   mean=0.0,
-                                                                   variance=1.0,
-                                                                   offset=None,
-                                                                   scale=None,
-                                                                   variance_epsilon=0.001)
-                    fm_intermediate = tf.nn.relu(bn_pix_shuffled_fm)
+                    x = self.pixel_shuffle_block(x)
 
             # Shape of last intermediate feature map output by the upsampling sub-pixel
             # convolution layers
             # (batch_size, 128, 128, 64)
-
             # Final convolution layer
             with tf.name_scope('final_convolution') as layer_scope:
 
-                final_conv_kernel = WeightVariable(shape=[9, 9, 64, 3],
-                                                   name='Filter_final',
-                                                   #model_scope=self.model_scope,
-                                                   layer_scope=layer_scope,
-                                                   initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                              stddev=0.02)
-                                                   )(step)
-                final_conv_bias = BiasVariable(shape=(3,),
-                                               name='bias_final',
-                                               #model_scope=self.model_scope,
-                                               layer_scope=layer_scope,
-                                               initializer=tf.initializers.TruncatedNormal(mean=0.02,
-                                                                                          stddev=0.02)
-                                               )(step)
-
-                final_conv_fm = tf.nn.conv2d(fm_intermediate,
-                                             final_conv_kernel,
-                                             strides=[1, 1, 1, 1],
-                                             padding='SAME'
-                                             )
-
-                bias_final_conv_fm = tf.nn.bias_add(final_conv_fm, final_conv_bias)
+                x = self.conv2d(filter_dims=[9, 9],
+                                num_channels=3,
+                                input_channels=64,
+                                strides=[1, 1, 1, 1]
+                                )
 
                 # Shape: (batch_size, 128, 128, 3)
-                output = tf.nn.sigmoid(final_conv_fm)
+                output = tf.nn.sigmoid(x)
 
             return output
+
+    @tf.function
+    def conv2d(self,
+               x,
+               filter_dims,
+               num_filters,
+               input_channels,
+               name,
+               strides=[1, 1, 1, 1],
+               layer_scope=None):
+
+        assert filter_dims == 1 or filter_dims == 2
+        if len(filter_dims) == 2: dim_x, dim_y = filter_dims
+        else: dim_x = dim_y = filter_dims
+
+        weight_initializer = tf.initializers.TruncatedNormal(mean=0.02,
+                                                             stddev=0.02)
+
+        filter_shape = [dim_x, dim_y, input_channels, num_filters]
+        kernel_name = name + '_kernel'
+        kernel = WeightVariable(shape=filter_shape,
+                                name=kernel_name,
+                                layer_scope=layer_scope,
+                                initializer=weight_initializer,
+                                )
+
+        bias_name = name + '_bias'
+        bias = BiasVariable(shape=(num_filters,),
+                            name=name,
+                            layer_scope=layer_scope,
+                            initializer=weight_initializer)
+
+        fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
+        fm = tf.nn.bias_add(fm, bias)
+
+        return fm
+
+    def resblock(self,
+                 x,
+                 filter_dims,
+                 num_filters,
+                 input_channels,
+                 name,
+                 strides=[1, 1, 1, 1],
+                 layer_scope=None):
+
+        # Store input as residual
+        res_input = x
+
+        # First Convolution
+        x = self.conv2d(filter_dims, num_filters, input_channels,
+                        name=name, strides=strides, layer_scope=layer_scope)
+        x = tf.nn.batch_normalization(x,
+                                      mean=0.0,
+                                      variance=1.0,
+                                      offset=None,
+                                      scale=None,
+                                      variance_epsilon=0.001)
+        x = tf.nn.relu(x)
+
+        # Second Convolution
+        x = self.conv2d(filter_dims, num_filters, input_channels,
+                        name=name, strides=strides, layer_scope=layer_scope)
+        x = tf.nn.batch_normalization(x,
+                                      mean=0.0,
+                                      variance=1.0,
+                                      offset=None,
+                                      scale=None,
+                                      variance_epsilon=0.001)
+        residual_sum = tf.add(res_input, x)
+        output = tf.nn.relu(residual_sum)
+
+        return output
+
+    def pixel_shuffle_block(self,
+                            x,
+                            layer_scope=None,
+                            ):
+        x = self.conv2d(x,
+                        filter_dims=[3, 3],
+                        num_filters=256,
+                        input_channels=64,
+                        strides=[1, 1, 1, 1],
+                        layer_scope=layer_scope)
+        x = self.pixel_shuffle_x2_layer(x)
+        x = tf.nn.batch_normalization(x,
+                                      mean=0.0,
+                                      variance=1.0,
+                                      offset=None,
+                                      scale=None,
+                                      variance_epsilon=0.001)
+        output = tf.nn.relu(x)
+
+        return output
 
     def pixel_shuffle_x2_layer(self, input_fm):
         """
