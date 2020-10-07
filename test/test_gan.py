@@ -23,6 +23,17 @@ def main(flags):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = flags.gpu_list
 
+    # Shows what operations are assigned to what device
+    tf.debugging.set_log_device_placement(True)
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+
+    # I've been having a bug where TF fails to fetch the convolution algorithm
+    # (a pretty big deal with any CNN architecture). I'm not sure if it has to do
+    # with the CUDNN_STATUS_INTERNAL_ERROR msg my log files have also been displaying.
+    # This line should help with that
+#    tf.config.gpu_options.allow_growth = True
+
     with tf.device('/cpu:0'):
         train_tfrecord_name = os.path.abspath(flags.train_tfrecord)
         valid_tfrecord_name = os.path.abspath(flags.valid_tfrecord)

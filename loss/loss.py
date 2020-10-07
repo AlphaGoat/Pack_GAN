@@ -63,7 +63,7 @@ class DRAGANLoss(object):
 
     def adversarial_generator_loss(self,
                                    y_pred_generated,
-                                   offset,
+                                   offset=1e-8,
                                    ):
         """
         Calculates log loss for generator, modified to maintain stronger gradient early
@@ -196,3 +196,6 @@ class DRAGANLoss(object):
                                                        truth_classes_real, assigned_classes_gen)
 
         return discriminator_loss, generator_loss
+
+
+

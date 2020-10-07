@@ -19,12 +19,14 @@ class DatasetGenerator(object):
                  num_images,
                  num_channels,
                  num_tags,
+                 image_shape=[128, 128, 3],
                  batch_size=4,
                  num_threads=1,
                  buffer_size=30,
                  label_smoothing=False,
                  encoding_function=None,
-                 return_filename=False):
+                 return_filename=False,
+                 image_reshape=False):
         """
         :param tfrecord_name: file path of tfrecord we will be reading
                               from
@@ -43,12 +45,14 @@ class DatasetGenerator(object):
         self.num_images = num_images
         self.num_channels = num_channels
         self.num_tags = num_tags
+        self.image_shape = image_shape
         self.batch_size = batch_size
         self.num_threads = num_threads
         self.buffer_size = buffer_size
         self.label_smoothing = label_smoothing
         self.encoding_function = encoding_function
         self.return_filename = return_filename
+        self.image_reshape = image_reshape
         self.dataset = self.build_pipeline(tfrecord_name,
                                            batch_size,
                                            self.num_threads,
@@ -86,9 +90,12 @@ class DatasetGenerator(object):
 
         # If the destination network requires a special encoding (or
         # we would like to apply our own to try to lower the complexity
-        # of the generation problem, do that here
+        # of the generation problem, do that here)
         if self.encoding_function is not None:
             data = data.map(self.encoding_function, num_parallel_calls=num_threads)
+
+        if self.reshape_images:
+            data = data.map(self.reshape_images, num_parallel_calls=num_threads)
 
         if cache_dataset_memory:
             data = data.cache()
@@ -170,7 +177,18 @@ class DatasetGenerator(object):
         else:
             return images, tags
 
+    def reshape_images(self, *args):
+        images = args[0]
+        images = tf.reshape(images, self.image_shape)
+
+        if len(args) == 3:
+            return images, args[1], args[2]
+
+        else:
+            return images, args[1]
+
     def get_batch(self):
         #return self.dataset.make_one_shot_iterator()
         return self.dataset.batch(self.batch_size)
+
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 _now=$(date +"%d%b%Y_%H%M")
-_file="../logs/run_$_now.txt"
+_file="/home/alphagoat/Projects/PACK_GAN/logs/run_$_now.txt"
 nohup python test_gan.py \
     --num_train_images=1000 \
     --train_batch_size=1 \
@@ -11,4 +11,5 @@ nohup python test_gan.py \
     --generated_image_channels=3 \
     --label_smoothing \
     --noisy_labels=0.05 \
+    --num_tags=4 \
     &>  $_file

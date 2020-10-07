@@ -6,10 +6,23 @@ import requests
 import sqlite3
 import sys
 import threading
+from tqdm.auto import tqdm
 import time
 import urllib
 
 from PIL import Image
+
+class TqdmUpTo(tqdm):
+    """Provides update_to(n), which uses `tqdm.update(delta_n)`."""
+    def update_to(self, b=1, bsize=1, tsize=None):
+        """
+        b : Blocks transferred so far
+        bsize : size of each block
+        tsize : total size
+        """
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n) # will also set self.n = b * bsize
 
 def retrieve_reddit_data_json(subreddit_url,
                               limit=5,
@@ -87,21 +100,39 @@ def scrape_images(post_json_data, data_path):
     image_url = post_json_data['url']
 
     if image_url.endswith('.jpg') or image_url.endswith('jpeg') or image_url.endswith('.png'):
+        print("downloading: ", image_url)
         filename = image_url.split('/')[-1]
         save_path = os.path.join(data_path, filename)
 
-        with open(save_path, 'wb') as out_file:
-            with contextlib.closing(urllib.request.urlopen(image_url)) as fp:
-                block_size = 1024 * 8
-                while True:
-                    block = fp.read(block_size)
-                    if not block:
-                        break
-                    out_file.write(block)
+        try:
+            with open(save_path, 'wb') as out_file:
+                filesize = int(requests.head(image_url).headers["Content-Length"])
+                with contextlib.closing(urllib.request.urlopen(image_url)) as fp, tqdm(
+                         unit="B",
+                         unit_scale=True,
+                         unit_divisor=1024,
+                         total=filesize,
+                         file=sys.stdout,
+                         desc=filename
+                         ) as progress:
 
-        # Get dimensions of downloaded image and save in data json
-        with Image.open(save_path) as img:
-            width, height = img.size
+                    block_size = 1024 * 8
+                    while True:
+                        block = fp.read(block_size)
+                        if not block:
+                            break
+                        datasize = out_file.write(block)
+                        # Update progress bar
+                        progress.update(datasize)
+
+            # Get dimensions of downloaded image and save in data json
+            with Image.open(save_path) as img:
+                width, height = img.size
+
+        except Exception as e:
+            print("error downloading: ", image_url, "due to ", e)
+            return None
+
 
     else:
         return None
@@ -193,7 +224,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset_path', type=str,
-                        default='/mnt/Data/machineLearningData/',
+#                        default='/mnt/Data/machineLearningData/',
+                        default=r'/media/alphagoat/Backup Plus',
                         help='Directory to deposit scraper data'
                         )
 
@@ -235,7 +267,7 @@ if __name__ == '__main__':
 
     # open sqlite database for data scraped from this subreddit, or initialize
     # a new one if one for this subreddit hasn't been initialized yet
-    print("sqlite database path: ", os.path.join(data_path, subreddit + '.sqlite3'))
+    print("sqlite database path: ", os.path.join(data_path, subreddit + '.sqlite3'), "\n")
 
     # NOTE: this is only a temporary solution! find out why the database can't be written
     #       to the external hard drive!
@@ -276,17 +308,18 @@ if __name__ == '__main__':
 #            with Spinner() as s1:
 #                try:
 
-            # So long as an after_token was returned by the reddit json,
-            # continue the loop
+                    # So long as an after_token was returned by the reddit json,
+                    # continue the loop
             while after_token:
-
+#                        pdb.set_trace()
                 json_data_list, after_token = retrieve_reddit_data_json(subreddit_url,
                                                                         limit=flags.num_images_to_scrape,
                                                                         after_token=after_token)
-
+#                        pdb.set_trace()
                 for post_data in json_data_list:
 
                     saved_post_data = scrape_images(post_data, data_path)
+#                            pdb.set_trace()
 
                     # If we gathered data from the post, meaning that the post
                     # contained an actual image
@@ -304,13 +337,28 @@ if __name__ == '__main__':
                         image_width  = saved_post_data["image"]["width"]
 
                         # Insert scraped data into sqlite table
-                        cursor.execute("""
-                                       INSERT INTO {}_metadata(file_name, image_url, post_url,
-                                       author_username, post_title, post_date, image_width, image_height)
-                                       VALUES(?,?,?,?,?,?,?,?)
-                                       """.format(subreddit),
-                                       (file_name, image_url, post_url, author, post_title, post_date,
-                                        image_width, image_height))
+                        # Try to pull subreddit table, if it exists
+                        try:
+                            cursor.execute("""
+                                           SELECT name FROM sqlite_master WHERE type='table' AND name='{}_metadata';
+                                           """.format(subreddit))
+
+                        except sqlite3.OperationalError:
+                            # If it doesn't exist, create it
+                            cursor.execute("""
+                                           CREATE TABLE {}_metadata(image_id INTEGER PRIMARY KEY, filename TEXT,
+                                           image_url TEXT, post_url TEXT, author_username TEXT, post_title TEXT,
+                                           post_date DATETIME image_width INTEGER, image_height INTEGER
+                                           """.format(subreddit)
+                                           )
+
+#                        cursor.execute("""
+#                                       INSERT INTO {}_metadata(file_name, image_url, post_url,
+#                                       author_username, post_title, post_date, image_width, image_height)
+#                                       VALUES(?,?,?,?,?,?,?,?)
+#                                       """.format(subreddit),
+#                                       (file_name, image_url, post_url, author, post_title, post_date,
+#                                        image_width, image_height))
 
                         # commit to database before moving onto next image
                         conn.commit()
@@ -329,17 +377,18 @@ if __name__ == '__main__':
                     after_token = False
                     break
 
-#            # Stop spinner
-#            s1.busy = False
-#            s1.join()
+#                    # Stop spinner
+#                    s1.busy = False
+#                    s1.join()
 
-            # Print number of images scraped
-            print("{0} were succesfully scraped from r/{1}".format(img_counter, flags.subreddit))
+                # Print number of images scraped
+                print("{0} were succesfully scraped from r/{1}".format(img_counter, flags.subreddit))
 
-#        except Exception:
-#            # If an exception is reached, stop spinner
-#            s1.busy = False
-#            s1.join()
+#                except Exception as e:
+#                    # If an exception is reached, stop spinner
+#                    s1.busy = False
+#                    s1.join()
+#                    print("image scraping operating halted: ", e)
 
 
 

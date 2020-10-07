@@ -41,16 +41,6 @@ class SRResNet(object):
         # statistics about model parameters
         self.variable_summary_update_freq = variable_summary_update_freq
 
-#    def initialize_variables(self):
-#        """
-#        Pre-initializes all parameter matrices composing model
-#        architecture
-#        """
-#        noise_dim = self.latent_space_vector_dim + self.num_tags
-#        self.W_fc1 = WeightVariable(shape=(noise_dim, 64 * 16 * 16),
-#                                    name='W_fc1',
-#                                    layer_scope=
-#
     def forward_pass(self, x, step=0):
         """
         Params:
@@ -64,106 +54,109 @@ class SRResNet(object):
         Return:
             out: output tensor of same shape as input
         """
-        # Initial dense layer
-        with tf.name_scope(self.model_scope):
+        # Weight variable
+        # shape: (batch_size, width * height * channels, 64 * 16 * 16)
+        input_shape = self.latent_space_vector_dim + self.num_tags
+        x = self.fully_connected_layer(x,
+                                       input_shape=input_shape,
+                                       output_shape=(64 * 16 * 16),
+                                       layer_name="fully_connected",
+                                       step=step)
 
-            with tf.name_scope('fully_connected1') as layer_scope:
+        # Batch Normalization
+        batch_norm_out_fc1 = BatchNormalization(
+                                        name='BatchNorm_fc1',
+                                        layer_scope=layer_scope,
+                                        summary_update_freq=self.variable_summary_update_freq,
+                                        )(out_fc1, step)
 
-                #print("layer_scope as presented in generator: ", layer_scope)
-                print("We are currently on step: ", step)
+        # Activation of output
+        act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
 
-                # Weight variable
-                # shape: (batch_size, width * height * channels, 64 * 16 * 16)
-                wfc1_shape = (self.latent_space_vector_dim + self.num_tags, 64 * 16 * 16)
-                W_fc1 = WeightVariable(shape=wfc1_shape,
-                                       name='W_fc1',
-                                       #model_scope=self.model_scope,
-                                       layer_scope=layer_scope,
-                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                  stddev=0.02),
-                                       summary_update_freq=self.variable_summary_update_freq,
-                                       )(step)
+        # Reshape output of dense layer to feed into resblocks
+        # NOTE: the output of this first dense layer will be saved and used
+        #       at the end of the following residual blocks as the last
+        #       input
+        # Shape: (batch_size, 16, 16, 64)
+        x = residual_input = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
 
-                # Initialize bias variable
-                # Shape: (batch_size, 64 * 16 * 16)
-                b_fc1 = BiasVariable(shape=(64 * 16* 16,),
-                                     name='b_fc1',
-                                     #model_scope=self.model_scope,
-                                     layer_scope=layer_scope,
-                                     initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                stddev=0.02),
-                                     summary_update_freq=self.variable_summary_update_freq,
-                                     )(step)
+        # Initialize 16 Residual blocks
+        for i in range(1, 17):
+            with tf.name_scope('residual_block{}'.format(i)) as layer_scope:
 
-                # Implement dense layer:
-                out_fc1 = tf.nn.bias_add(tf.matmul(x, W_fc1), b_fc1)
+                x = self.resblock(x,
+                                  filter_dims=[3, 3],
+                                  num_filters=64,
+                                  input_channels=64,
+                                  strides=[1, 1, 1, 1],
+                                  name="residual_block{}".format(i)
+                                  )
+         # Shape: (batch_Size, 16, 16, 64)
+        x = tf.nn.batch_normalization(x,
+                                      mean=0.0,
+                                      variance=1.0,
+                                      offset=None,
+                                      scale=None,
+                                      variance_epsilon=0.001)
+        x = tf.nn.relu(x)
+        x = tf.add(x, residual_input)
 
-                # Batch Normalization
-                #batch_norm_out_fc1 = tf.nn.batch_normalization(out_fc1, training=
-                batch_norm_out_fc1 = BatchNormalization(
-                                                name='BatchNorm_fc1',
-                                                #model_scope=self.model_scope,
-                                                layer_scope=layer_scope,
-                                                summary_update_freq=self.variable_summary_update_freq,
-                                                )(out_fc1, step)
+        # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
+        #           x and y dimension and randomly shuffles pixels in those dimensions
+        for i in range(1, 4):
+            with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
 
-                # Activation of output
-                act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
+                # Initializer filter and bias for upsampling convolution
+                x = self.pixel_shuffle_block(x)
 
-            # Reshape output of dense layer to feed into resblocks
-            # NOTE: the output of this first dense layer will be saved and used
-            #       at the end of the following residual blocks as the last
-            #       input
-            # Shape: (batch_size, 16, 16, 64)
-            x = residual_input = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
+        # Shape of last intermediate feature map output by the upsampling sub-pixel
+        # convolution layers
+        # (batch_size, 128, 128, 64)
+        # Final convolution layer
+        with tf.name_scope('final_convolution') as layer_scope:
 
-            # Initialize 16 Residual blocks
-            for i in range(1, 17):
-                with tf.name_scope('residual_block{}'.format(i)) as layer_scope:
+            x = self.conv2d(filter_dims=[9, 9],
+                            num_channels=3,
+                            input_channels=64,
+                            strides=[1, 1, 1, 1]
+                            )
 
-                    x = self.resblock(x,
-                                      filter_dims=[3, 3],
-                                      num_filters=64,
-                                      input_channels=64,
-                                      strides=[1, 1, 1, 1],
-                                      name="residual_block{}".format(i)
-                                      )
-             # Shape: (batch_Size, 16, 16, 64)
-            x = tf.nn.batch_normalization(x,
-                                          mean=0.0,
-                                          variance=1.0,
-                                          offset=None,
-                                          scale=None,
-                                          variance_epsilon=0.001)
-            x = tf.nn.relu(x)
-            x = tf.add(x, residual_input)
+            # Shape: (batch_size, 128, 128, 3)
+            output = tf.nn.sigmoid(x)
 
-            # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
-            #           x and y dimension and randomly shuffles pixels in those dimensions
-            for i in range(1, 4):
-                with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
+        return output
 
-                    # Initializer filter and bias for upsampling convolution
-                    x = self.pixel_shuffle_block(x)
+    def fully_connected_layer(self,
+                              x,
+                              input_shape,
+                              output_shape,
+                              layer_name,
+                              step=0):
+        # Weight variable
+        weight_shape = (input_shape, output_shape)
+        W_fc1 = WeightVariable(shape=weight_shape,
+                               name='W_fc1',
+                               #model_scope=self.model_scope,
+                               layer_scope=layer_name,
+                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                          stddev=0.02),
+                               summary_update_freq=self.variable_summary_update_freq,
+                               )(step)
 
-            # Shape of last intermediate feature map output by the upsampling sub-pixel
-            # convolution layers
-            # (batch_size, 128, 128, 64)
-            # Final convolution layer
-            with tf.name_scope('final_convolution') as layer_scope:
+        # Initialize bias variable
+        # Shape: (batch_size, 64 * 16 * 16)
+        b_fc1 = BiasVariable(shape=(output_shape,),
+                            name='b_fc1',
+                            #model_scope=self.model_scope,
+                            layer_scope=layer_name,
+                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                       stddev=0.02),
+                            summary_update_freq=self.variable_summary_update_freq,
+                            )(step)
 
-                x = self.conv2d(filter_dims=[9, 9],
-                                num_channels=3,
-                                input_channels=64,
-                                strides=[1, 1, 1, 1]
-                                )
+        # Implement dense layer:
+        out_fc1 = tf.nn.bias_add(tf.matmul(x, W_fc1), b_fc1)
 
-                # Shape: (batch_size, 128, 128, 3)
-                output = tf.nn.sigmoid(x)
-
-            return output
-
-    @tf.function
     def conv2d(self,
                x,
                filter_dims,
@@ -171,7 +164,8 @@ class SRResNet(object):
                input_channels,
                name,
                strides=[1, 1, 1, 1],
-               layer_scope=None):
+               layer_scope=None,
+               step=0):
 
         assert filter_dims == 1 or filter_dims == 2
         if len(filter_dims) == 2: dim_x, dim_y = filter_dims
@@ -186,13 +180,13 @@ class SRResNet(object):
                                 name=kernel_name,
                                 layer_scope=layer_scope,
                                 initializer=weight_initializer,
-                                )
+                                )(step)
 
         bias_name = name + '_bias'
         bias = BiasVariable(shape=(num_filters,),
                             name=name,
                             layer_scope=layer_scope,
-                            initializer=weight_initializer)
+                            initializer=weight_initializer)(step)
 
         fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
         fm = tf.nn.bias_add(fm, bias)
@@ -206,7 +200,8 @@ class SRResNet(object):
                  input_channels,
                  name,
                  strides=[1, 1, 1, 1],
-                 layer_scope=None):
+                 layer_scope=None,
+                 step=0):
 
         # Store input as residual
         res_input = x
@@ -236,6 +231,7 @@ class SRResNet(object):
 
         return output
 
+    @tf.function
     def pixel_shuffle_block(self,
                             x,
                             layer_scope=None,

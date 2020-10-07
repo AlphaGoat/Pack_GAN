@@ -2,7 +2,6 @@
 Manufactures batches of noise, i.e., vectors of randomly distributed
 numbers between 0 and 1, to feed into the generator
 """
-
 import tensorflow as tf
 import numpy as np
 

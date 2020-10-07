@@ -112,52 +112,25 @@ class BatchNormalization(object):
     """
     def __init__(self,
                  name,
-                 #model_scope,
-                 layer_scope,
                  summary_update_freq=10):
 
         # Variables to keep track of name scope of operation
         #self.model_scope = model_scope
-        self.layer_scope = layer_scope
         self.batch_norm_name = name
-        self.batch_norm_scope =  "{0}/{1}".format(self.layer_scope,
-                                                  self.batch_norm_name)
 
         # Internal variable to keep track of the update frequency for
         # tensorboard summaries
         self.summary_update_freq = summary_update_freq
 
-    def initialize_weights(self, param_shape, layer_scope):
+    def initialize_weights(self, param_shape):
         """
         Initializes tensors to hold mean, variance,
         scale, and bias hyperparameters
         """
-#            # Tensor for calculated means (non trainable)
-#            self.t_mean = WeightVariable(
-#                                shape=(param_shape,),
-#                                name='mean_tensor',
-#                                model_scope=self.model_scope,
-#                                layer_scope=self.batch_norm_scope,
-#                                initializer=tf.initializers.zeros,
-#                                summary_update_freq=self.summary_update_freq,
-#                                )
-#
-#            # Tensor for calculated variances
-#            self.t_var = WeightVariable(
-#                                shape=(param_shape,),
-#                                name='var_tensor',
-#                                model_scope=self.model_scope,
-#                                layer_scope=self.batch_norm_scope,
-#                                initializer=tf.initializers.zeros,
-#                                summary_update_freq=self.summary_update_freq,
-#                                )
-
         # Tensor for offset parameters
         self.t_beta = WeightVariable(
                             shape=(param_shape,),
                             name='offset_tensor',
-                            #model_scope=self.model_scope,
-                            layer_scope=layer_scope,
                             initializer=tf.zeros,
                             summary_update_freq=self.summary_update_freq,
                             )
@@ -166,8 +139,6 @@ class BatchNormalization(object):
         self.t_gamma = WeightVariable(
                             shape=(param_shape,),
                             name='scale_tensor',
-                            #model_scope=self.model_scope,
-                            layer_scope=layer_scope,
                             initializer=tf.zeros,
                             summary_update_freq=self.summary_update_freq,
                             )
@@ -175,37 +146,38 @@ class BatchNormalization(object):
     def __call__(self, x, step=0):
 
         # If first step in training loop, initialize weights
-        with tf.name_scope(self.batch_norm_name) as layer_scope:
-            if step == 0:
-                input_shape = tf.shape(x)
-                param_shape = input_shape[-1]
+        if step == 0:
+            input_shape = tf.shape(x)
+            param_shape = input_shape[-1]
 
-                self.initialize_weights(param_shape, layer_scope)
+            self.initialize_weights(param_shape)
 
-            # Calculate the mean and variance over batch dimension of input
-            mean, variance = tf.nn.moments(x, axes=[0])
+        # Calculate the mean and variance over batch dimension of input
+        mean, variance = tf.nn.moments(x, axes=[0])
 
-            return tf.nn.batch_normalization(x,
-                                             mean=mean,
-                                             variance=variance,
-                                             offset=self.t_beta(step),
-                                             scale=self.t_gamma(step),
-                                             variance_epsilon=0.001
+        return tf.nn.batch_normalization(x,
+                                         mean=mean,
+                                         variance=variance,
+                                         offset=self.t_beta(step),
+                                         scale=self.t_gamma(step),
+                                         variance_epsilon=0.001
                                          )
 
-@define_scope
-class WeightVariable(object):
+class WeightVariable(tf.Module):
     """
-    Base class for weight parameters to be used in learning layers
+    Base class for weight parameters to be used in learning layers.
+    Allows us to plot statistics for our weight parameters for every
+    step of the training process, if desired
     """
     def __init__(self,
                  shape,
                  name,
                  #model_scope,
                  layer_scope,
-                 initializer=None,
-                 summary_update_freq=1,
+                 initializer=tf.initializers.zeros,
+                 summary_update_freq=None,
                  ):
+        super(WeightVariable, self).__init__(name=name)
 
         # Shape of initializer parameter tensor
         self.shape = shape
@@ -216,54 +188,38 @@ class WeightVariable(object):
         # variable to keep track of the scope the variable falls under
         self.layer_scope = layer_scope
 
+        # our intitializer
+        self.initializer = initializer
+
         # Update frequency for tensorboard summaries. If 'None',
         # then we are not maintaining a tensorboard for this operation
+        assert type(summary_update_freq) == int or type(summary_update_freq) == type(None)
         self.summary_update_freq = summary_update_freq
 
-        # if no initializer is provided, initialize params as zeros
-        if not initializer:
-            self.initializer = tf.zeros
-        else:
-            self.initializer=initializer
-
-        # Internal step variable to pass to summaries
-        self._counter = 0
-
-        # Initializer flag. If it is not set, then the
-        # variable has not been initialized
         self._initialized = False
 
-    def initialize_variable(self):
-        # Initialize Weight Variable
-        initial = tf.Variable(
-            self.initializer(self.shape),
-            trainable=True,
-            name=self.name,
-            dtype=tf.float32,
-            )
-
-        assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
-
-        self.initial = initial
-
-        # Set initialization flag
-        self._initialized = True
-
-    #@tf.function
     def __call__(self, step):
 
-        # create summaries for updated weights
-        self._counter = step
         if not self._initialized:
-            self.initialize_variable()
+            # Initialize Weight Variable
+            self.initial = tf.Variable(
+                self.initializer(self.shape),
+                trainable=True,
+                name=self.name,
+                dtype=tf.float32,
+                )
+            self._initialized = True
+            print("initial.name: ", self.initial.name)
+            assert self.initial.name == "%s%s:0" % (self.layer_scope, self.name)
 
-        if self._counter % self.summary_update_freq == 0:
-            variable_summaries(self.initial, self._counter)
+        # create summaries for updated weights
+        if self.summary_update_freq:
+            if step % self.summary_update_freq == 0:
+                variable_summaries(self.initial, step)
 
         return self.initial
 
-@define_scope
-class BiasVariable(object):
+class BiasVariable(tf.Module):
     """
     Base class for bias parameters to be used in learning layers
     """
@@ -272,8 +228,9 @@ class BiasVariable(object):
                  name,
                  layer_scope,
                  initializer=tf.initializers.zeros,
-                 summary_update_freq=1,
+                 summary_update_freq=None,
                  ):
+        super(BiasVariable, self).__init__(name=name)
 
         # Variable keeping track of shape of initializer parameter tensor
         self.shape = shape
@@ -288,42 +245,30 @@ class BiasVariable(object):
         self.initializer = initializer
 
         # Frequency with which to update tensorboard summaries
+        assert type(summary_update_freq) == int or type(summary_update_freq) == type(None)
         self.summary_update_freq = summary_update_freq
 
-        # Internal step variable to pass to summaries
-        self._counter = 0
-
-        # Initializer flag. If it is not set, then the
-        # variable has not been initialized
         self._initialized = False
 
-    def initialize_variable(self):
-        # Initialize Weight Variable
-        #with tf.name_scope(self.layer_scope):
-        initial = tf.Variable(
-            self.initializer(self.shape),
-            trainable=True,
-            name=self.name,
-            dtype=tf.float32,
-            )
-
-        assert initial.name == "%s%s:0" % (self.layer_scope, self.name)
-
-        self.initial = initial
-
-        # set initialization flag
-        self._initialized = True
-
-    #@tf.function
     def __call__(self, step):
 
-        # Call variable_summaries for updated weights
-        self._counter = step
         if not self._initialized:
-            self.initialize_variable()
+            # Initialize bias parameters
+            self.initial = tf.Variable(
+                self.initializer(self.shape),
+                trainable=True,
+                name=self.name,
+                dtype=tf.float32,
+                )
 
-        if self._counter % self.summary_update_freq == 0:
-            variable_summaries(self.initial, self._counter)
+            self._initialized = True
+
+            assert self.initial.name == "%s%s:0" % (self.layer_scope, self.name)
+
+        # Call variable_summaries for updated weights
+        if self.summary_update_freq:
+            if step % self.summary_update_freq == 0:
+                variable_summaries(self.initial, step)
 
         return self.initial
 
