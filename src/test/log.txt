@@ -1,0 +1,108 @@
+2021-01-11 10:07:08.892328: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcuda.so.1
+2021-01-11 10:07:08.922134: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.922385: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 0 with properties: 
+pciBusID: 0000:01:00.0 name: GeForce GTX 1650 computeCapability: 7.5
+coreClock: 1.56GHz coreCount: 16 deviceMemorySize: 3.82GiB deviceMemoryBandwidth: 119.24GiB/s
+2021-01-11 10:07:08.922516: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2021-01-11 10:07:08.923623: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10
+2021-01-11 10:07:08.924660: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10
+2021-01-11 10:07:08.924823: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10
+2021-01-11 10:07:08.926038: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10
+2021-01-11 10:07:08.926660: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10
+2021-01-11 10:07:08.929069: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2021-01-11 10:07:08.929151: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.929434: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.929637: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2021-01-11 10:07:08.929878: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2021-01-11 10:07:08.934438: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2599990000 Hz
+2021-01-11 10:07:08.934714: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55c3bc8b5710 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2021-01-11 10:07:08.934728: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2021-01-11 10:07:08.934836: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.935060: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 0 with properties: 
+pciBusID: 0000:01:00.0 name: GeForce GTX 1650 computeCapability: 7.5
+coreClock: 1.56GHz coreCount: 16 deviceMemorySize: 3.82GiB deviceMemoryBandwidth: 119.24GiB/s
+2021-01-11 10:07:08.935087: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2021-01-11 10:07:08.935098: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10
+2021-01-11 10:07:08.935109: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10
+2021-01-11 10:07:08.935119: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10
+2021-01-11 10:07:08.935129: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10
+2021-01-11 10:07:08.935139: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10
+2021-01-11 10:07:08.935156: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2021-01-11 10:07:08.935194: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.935423: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.935621: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2021-01-11 10:07:08.935641: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2021-01-11 10:07:08.993341: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1096] Device interconnect StreamExecutor with strength 1 edge matrix:
+2021-01-11 10:07:08.993368: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1102]      0 
+2021-01-11 10:07:08.993375: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] 0:   N 
+2021-01-11 10:07:08.993495: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.993739: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.993955: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-01-11 10:07:08.994158: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1241] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 3194 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1650, pci bus id: 0000:01:00.0, compute capability: 7.5)
+2021-01-11 10:07:08.995345: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55c3bdb3b430 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2021-01-11 10:07:08.995357: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): GeForce GTX 1650, Compute Capability 7.5
+2021-01-11 10:07:08.996451: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Reshape in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:08.996974: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op TensorSliceDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.003909: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op FlatMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+WARNING:tensorflow:From /home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/site-packages/tensorflow_core/python/ops/image_ops_impl.py:1556: div (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Deprecated in favor of operator or tf.math.divide.
+2021-01-11 10:07:09.248849: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op MapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.345658: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op ParallelMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.345934: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op RepeatDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.346110: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op BatchDatasetV2 in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.346233: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op PrefetchDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.346476: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op TensorSliceDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.348363: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op FlatMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.372544: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op MapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.375943: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op ParallelMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.376150: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op RepeatDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.376311: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op BatchDatasetV2 in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.376425: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op PrefetchDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.376650: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op TensorSliceDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.378745: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op FlatMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.403301: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op MapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.406806: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op ParallelMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.407014: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op RepeatDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.407166: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op BatchDatasetV2 in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.407275: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op PrefetchDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.407682: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op TensorDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.413941: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op FlatMapDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.414139: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op RepeatDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.414284: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op BatchDatasetV2 in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.414387: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op PrefetchDataset in device /job:localhost/replica:0/task:0/device:CPU:0
+2021-01-11 10:07:09.421006: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op RandomStandardNormal in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.710797: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Mul in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711066: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Add in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711376: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711439: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarIsInitializedOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711493: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op LogicalNot in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711680: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Assert in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.711929: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op AssignVariableOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.712624: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.719794: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Reshape in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.719969: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.830131: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.830898: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.834987: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op Fill in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:09.853021: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:10.590882: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+2021-01-11 10:07:10.591794: I tensorflow/core/common_runtime/eager/execute.cc:573] Executing op VarHandleOp in device /job:localhost/replica:0/task:0/device:GPU:0
+Traceback (most recent call last):
+  File "/home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/alphagoat/Projects/PACK_GAN/src/test/test.py", line 293, in <module>
+    main(flags)
+  File "/home/alphagoat/Projects/PACK_GAN/src/test/test.py", line 124, in main
+    gen_output = initialize_generator(gen_img_input, gen_tag_input)
+  File "/home/alphagoat/Projects/PACK_GAN/src/models/dragan/generator_keras.py", line 38, in initialize_generator
+    x = tf.keras.layers.BatchNormalization()(x)
+  File "/home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/base_layer.py", line 748, in __call__
+    self._maybe_build(inputs)
+  File "/home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/base_layer.py", line 2116, in _maybe_build
+    self.build(input_shapes)
+  File "/home/alphagoat/anaconda3/envs/tf_gpu2.1/lib/python3.7/site-packages/tensorflow_core/python/keras/layers/normalization.py", line 374, in build
+    input_shape)
+ValueError: ('Input has undefined `axis` dimension. Input shape: ', TensorShape([1, None, None, None]))
