@@ -212,7 +212,7 @@ class WeightVariable(tf.Module):
                 trainable=True,
                 name=self.layer_name + ":" + self.name,
                 dtype=tf.float32,
-                )
+            )
             self._initialized = True
             if self.scope is None:
                 assert self.initial.name == "%s:%s:0" % (self.layer_name, self.name)

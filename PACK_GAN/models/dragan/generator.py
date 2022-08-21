@@ -237,7 +237,6 @@ class SRResNet(object):
 
         return output
 
-    @tf.function
     def pixel_shuffle_block(self,
                             x,
                             layer_scope=None,
