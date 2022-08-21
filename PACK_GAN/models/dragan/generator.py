@@ -223,7 +223,7 @@ class SRResNet(object):
         x = tf.nn.relu(x)
 
         # Second Convolution
-        x = self.conv2d(filter_dims, num_filters, input_channels,
+        x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_2", strides=strides, layer_scope=layer_scope,
                         step=step)
         x = tf.nn.batch_normalization(x,
