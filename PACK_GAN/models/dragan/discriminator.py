@@ -60,7 +60,7 @@ class Discriminator(object):
                                             )(step)
 
             initial_bias = BiasVariable(shape=(32,),
-                                        name='bias_initial',
+                                        variable_name='bias_initial',
                                         #model_scope=self.model_scope,
                                         layer_name=layer_scope,
                                         scope=layer_scope,
@@ -76,19 +76,21 @@ class Discriminator(object):
 
         # First series of ResBlocks
         for i in range(2):
-            with tf.name_scope('(k3n32s1) ResBlock1_pass{}'.format(i)):
+            with tf.name_scope('(k3n32s1) ResBlock1_pass{}'.format(i)) as layer_scope:
 
                 # First convolutional layer in ResBlock 1
                 res_kernel1 = WeightVariable(shape=[3, 3, 32, 32],
-                                              name='res1_filter1',
-                                              model_scope=self.model_scope,
+                                              variable_name='res1_filter1',
+                                              layer_name=layer_scope,
+                                              scope=layer_scope,
                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
                                               )
 
                 res_bias1 = BiasVariable(shape=(32,),
-                                          name='res1_bias1',
-                                          model_scope=self.model_scope,
+                                          variable_name='res1_bias1',
+                                          layer_name=layer_scope,
+                                          scope=layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
@@ -101,15 +103,17 @@ class Discriminator(object):
 
                 # Second convolutional layer in ResBlock
                 res_kernel2 = WeightVariable(shape=[3, 3, 32, 32],
-                                              name='res1_filter2',
-                                              model_scope=self.model_scope,
+                                              variable_name='res1_filter2',
+                                              layer_name=layer_scope,
+                                              scope=layer_scope,
                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
                                               )
 
                 res_bias2 = BiasVariable(shape=(32,),
-                                          name='res1_bias2',
-                                          model_scope=self.model_scope,
+                                          variable_name='res1_bias2',
+                                          layer_name=layer_scope,
+                                          scope=layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
@@ -126,17 +130,19 @@ class Discriminator(object):
 
         # Convolutional layer 'bridging gap' between first and second set of ResBlocks. This
         # conv layer has the effect of blowing up the number of channels x2 as well
-        with tf.name_scope('bridge_conv_layer1'):
+        with tf.name_scope('bridge_conv_layer1') as layer_scope:
             bridge1_kernel = WeightVariable(shape=[4, 4, 32, 64],
-                                            name='bridge1_kernel',
-                                            model_scope=self.model_scope,
+                                            variable_name='bridge1_kernel',
+                                            layer_name=layer_scope,
+                                            scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge1_bias = BiasVariable(shape=(64,),
-                                       name='bridge_bias',
-                                       model_scope=self.model_scope,
+                                       variable_name='bridge_bias',
+                                       layer_name=layer_scope,
+                                       scope=layer_scope,
                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                   stddev=0.02)
                                        )
@@ -149,18 +155,20 @@ class Discriminator(object):
 
         # Second ResBlock (filter: (3x3), stride: (1, 1, 1, 1), num_filters: 64)
         for i in range(2):
-            with tf.name_scope('(k3n64s1) ResBlock2_pass{}'.format(i)):
+            with tf.name_scope('(k3n64s1) ResBlock2_pass{}'.format(i)) as layer_scope:
                 # 1st conv layer in ResBlock
                 resblock2_kernel1 = WeightVariable(shape=[3, 3, 64, 64],
-                                                   name='resblock2_kernel1_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock2_kernel1_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
                 resblock2_bias1 = BiasVariable(shape=(64,),
-                                               name='resblock2_bias1_pass{}'.format(i),
-                                               model_scope=self.model_scope,
+                                               variable_name='resblock2_bias1_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
@@ -174,15 +182,17 @@ class Discriminator(object):
 
                 # 2nd conv layer in ResBlock
                 resblock2_kernel2 = WeightVariable(shape=[3, 3, 64, 64],
-                                                   name='resblock2_kernel2_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock2_kernel2_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
                 resblock2_bias2 = BiasVariable(Shape=(64,),
-                                               name='resblock2_bias2_pass{}'.format(i),
-                                               model_scope=self.model_scope,
+                                               variable_name='resblock2_bias2_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
@@ -198,17 +208,19 @@ class Discriminator(object):
                 residual_output = residual_input = tf.nn.leaky_relu(elementwise_sum_resblock2)
 
         # Second bridge conv layer between two ResBlocks
-        with tf.name_scope('bridge_conv_layer2'):
+        with tf.name_scope('bridge_conv_layer2') as layer_scope:
             bridge2_kernel = WeightVariable(shape=[4, 4, 64, 128],
-                                            name='bridge2_kernel',
-                                            model_scope=self.model_scope,
+                                            variable_name='bridge2_kernel',
+                                            layer_name=layer_scope,
+                                            scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge2_bias = BiasVariable(shape=(128,),
-                                        name='bridge2_bias',
-                                        model_scope=self.model_scope,
+                                        variable_name='bridge2_bias',
+                                        layer_name=layer_scope,
+                                        scope=layer_scope,
                                         initializer=tf.initialzier.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )
@@ -219,21 +231,23 @@ class Discriminator(object):
             residual_input = bridge2_output = tf.nn.leaky_relu(bridge2_fm)
 
         # Initialize 3rd ResBlock
-        with tf.name_scope('(k3n128s1) ResBlock3'):
+        with tf.name_scope('(k3n128s1) ResBlock3') as block_scope:
             for i in range(1,3):
-                with tf.name_scope('(k3n128s1) ResBlock3_pass{}'.format(i)):
+                with tf.name_scope('(k3n128s1) ResBlock3_pass{}'.format(i)) as layer_scope:
 
                     # First conv layer
                     resblock3_kernel1 = WeightVariable(shape=[3, 3, 128, 128],
-                                                       name='resblock3_kernel1_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock3_kernel1_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock3_bias1 = BiasVariable(shape=(128,),
-                                                   name='resblock3_bias1_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock3_bias1_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope +layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -247,15 +261,17 @@ class Discriminator(object):
 
                     # Second conv layer
                     resblock3_kernel2 = WeightVariable(shape=[3, 3, 128, 128],
-                                                       name='resblock3_kernel2_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock3_kernel2_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock3_bias2 = BiasVariable(shape=(128,),
-                                                   name='resblock3_bias2_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock3_bias2_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -273,17 +289,19 @@ class Discriminator(object):
                     residual_output = residual_input = tf.nn.leaky_relu(elementwise_sum_resblock3)
 
         # Third bridge convolutional layer
-        with tf.name_scope('bridge_conv_layer3'):
+        with tf.name_scope('bridge_conv_layer3') as layer_scope:
             bridge3_kernel = WeightVariable(shape=[3, 3, 128, 256],
-                                            name='bridge3_kernel',
-                                            model_scope=self.model_scope,
+                                            variable_name='bridge3_kernel',
+                                            layer_scope=layer_scope,
+                                            scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge3_bias = BiasVariable(shape=(256,),
-                                        name='bridge3_bias',
-                                        model_scope=self.model_scope,
+                                        variable_name='bridge3_bias',
+                                        layer_name=layer_scope,
+                                        scope=layer_scope,
                                         initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )
@@ -294,21 +312,23 @@ class Discriminator(object):
             residual_input = act_bridge3_fm = tf.nn.leaky_relu(bridge3_fm)
 
         # Initialize 4th ResBlock
-        with tf.name_scope('(k3n256s1) ResBlock4'):
+        with tf.name_scope('(k3n256s1) ResBlock4') as block_scope:
             for i in range(1,3):
-                with tf.name_scope('ResBlock4 pass{}'.format(i)):
+                with tf.name_scope('ResBlock4 pass{}'.format(i)) as layer_scope:
 
                     # 1st Conv Layer
                     resblock4_kernel1 = WeightVariable(shape=[3, 3, 256, 256],
-                                                       name='resblock4_kernel1_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock4_kernel1_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock4_bias1 = BiasVariable(shape=(256,),
-                                                   name='resblock4_bias1_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock4_bias1_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -321,15 +341,17 @@ class Discriminator(object):
 
                     # 2nd Conv layer
                     resblock4_kernel2 = WeightVariable(shape=[3, 3, 256, 256],
-                                                       name='resblock4_kernel2_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock4_kernel2_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initiializer.TruncatedNormal(mean=0.0,
                                                                                                    stddev=0.02)
                                                        )
 
                     resblock4_bias2 = BiasVariable(shape=(256,),
-                                                   name='resblock4_bias2_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock4_bias2_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -347,17 +369,20 @@ class Discriminator(object):
 
 
         # ..."Hey, look at that... 4th bridge layer
-        with tf.name_scope('bridge_conv_layer4'):
+        with tf.name_scope('bridge_conv_layer4') as layer_scope:
             bridge4_kernel = WeightVariable(shape=[3, 3, 256, 512],
-                                            name='bridge_conv_layer4_kernel',
+                                            variable_name='bridge_conv_layer4_kernel',
+                                            layer_name=layer_scope,
+                                            scope=layer_scope,
                                             model_scope=self.model_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge4_bias = BiasVariable(shape=(512,),
-                                        name='bridge_conv_layer4_bias',
-                                        model_scope=self.model_scope,
+                                        variable_name='bridge_conv_layer4_bias',
+                                        layer_name=layer_scope,
+                                        scope=layer_scope,
                                         initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )
@@ -368,20 +393,22 @@ class Discriminator(object):
             act_bridge4_fm = residual_input = tf.nn.leaky_relu(bridge4_fm)
 
         # And a wild 5th ResBlock (the last one, I promise) appears
-        with tf.name_scope('(k3n512s1) ResBlock5'):
+        with tf.name_scope('(k3n512s1) ResBlock5') as block_scope:
             for i in range(1, 3):
-                with tf.name_scope('(k3n512s1) ResBlock5_pass{}.'.format(i)):
+                with tf.name_scope('(k3n512s1) ResBlock5_pass{}.'.format(i)) as layer_scope:
                     # 1st Conv layer
                     resblock5_kernel1 = WeightVariable(shape=[3, 3, 512, 512],
-                                                       name='resblock5_kernel1_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock5_kernel1_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock5_bias1 = BiasVariable(shape=(512,),
-                                                   name='resblock5_bias1_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock5_bias1_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -395,15 +422,17 @@ class Discriminator(object):
 
                     # 2nd Conv layer
                     resblock5_kernel2 = WeightVariable(shape=[3, 3, 512, 512],
-                                                       name='resblock5_kernel1_pass{}'.format(i),
-                                                       model_scope=self.model_scope,
+                                                       variable_name='resblock5_kernel1_pass{}'.format(i),
+                                                       layer_name=layer_scope,
+                                                       scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock5_bias2 = BiasVariable(shape=(512,),
-                                                   name='resblock5_bias2_pass{}'.format(i),
-                                                   model_scope=self.model_scope,
+                                                   variable_name='resblock5_bias2_pass{}'.format(i),
+                                                   layer_name=layer_scope,
+                                                   scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
@@ -420,17 +449,19 @@ class Discriminator(object):
                     residual5_output = residual_input = tf.nn.leaky_relu(resblock5_elementwise_sum)
 
         # Initialize final conv layer
-        with tf.name_scope('(k3n1024s2) final_conv_layer'):
+        with tf.name_scope('(k3n1024s2) final_conv_layer') as layer_scope:
             final_kernel = WeightVariable(shape=[3, 3, 512, 1024],
-                                          name='final_conv_layer_filter',
-                                          model_scope=self.model_scope,
+                                          variable_name='final_conv_layer_filter',
+                                          layer_name=layer_scope,
+                                          scope=block_scope + layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
 
             final_bias = BiasVariable(shape=(1024,),
-                                      name='final_conv_layer_bias',
-                                      model_scope=self.model_scope,
+                                      variable_name='final_conv_layer_bias',
+                                      layer_name=layer_scope,
+                                      scope=block_scope + layer_scope,
                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                  stddev=0.02)
                                      )
@@ -447,17 +478,19 @@ class Discriminator(object):
         flattened_final_fm = tf.reshape(final_act_fm, [-1, flattened_shape])
 
         # Final output layer for truth_score
-        with tf.name_scope('forgery_score_output_layer'):
+        with tf.name_scope('forgery_score_output_layer') as layer_scope:
             forgery_score_weights = WeightVariable(shape=[flattened_shape, 1],
-                                                 name='forgery_score_weights',
-                                                 model_scope=self.model_scope,
-                                                 initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                   variable_name='forgery_score_weights',
+                                                   layer_name=layer_scope,
+                                                   scope=layer_scope,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                             stddev=0.02)
                                                  )
 
             forgery_score_bias = BiasVariable(shape=(1,),
-                                            name='forgery_score_bias',
-                                            model_scope=self.model_scope,
+                                            variable_name='forgery_score_bias',
+                                            layer_name=layer_scope,
+                                            scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
@@ -469,17 +502,19 @@ class Discriminator(object):
             forgery_score = tf.nn.sigmoid(unactivated_forgery_score)
 
         # Final output layer for tags to assign to input image
-        with tf.name_scope('tag_confidence_output_layer'):
+        with tf.name_scope('tag_confidence_output_layer') as layer_scope:
             tag_confidence_weights = WeightVariable(shape=[flattened_shape, self.num_tags],
-                                                    name='tag_confidence_weights',
-                                                    model_scope=self.model_scope,
+                                                    variable_name='tag_confidence_weights',
+                                                    layer_name=layer_scope,
+                                                    scope=layer_scope,
                                                     initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                stddev=0.02)
                                                     )
 
             tag_confidence_bias = BiasVariable(shape=(self.num_tags,),
-                                               name='tag_confidence_bias',
-                                               model_scope=self.model_scope,
+                                               variable_name='tag_confidence_bias',
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
