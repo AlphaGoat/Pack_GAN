@@ -116,7 +116,7 @@ class SRResNet(object):
         with tf.name_scope('final_convolution') as layer_scope:
 
             x = self.conv2d(filter_dims=[9, 9],
-                            num_channels=3,
+                            num_filters=3,
                             input_channels=64,
                             strides=[1, 1, 1, 1],
                             name="conv1_1",
