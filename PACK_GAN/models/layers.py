@@ -214,10 +214,13 @@ class WeightVariable(tf.Module):
                 dtype=tf.float32,
             )
             self._initialized = True
-            if self.scope is None:
-                assert self.initial.name == "%s:%s:0" % (self.layer_name, self.name)
-            else:
-                assert self.initial.name == "%s%s:%s:0" % (self.scope, self.layer_name, self.name)
+            try:
+                if self.scope is None:
+                    assert self.initial.name == "%s:%s:0" % (self.layer_name, self.name)
+                else:
+                    assert self.initial.name == "%s%s:%s:0" % (self.scope, self.layer_name, self.name)
+            except AssertionError:
+                import pdb; pdb.set_trace()
         # create summaries for updated weights
         if self.summary_update_freq:
             if step % self.summary_update_freq == 0:
