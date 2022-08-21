@@ -107,7 +107,7 @@ class SRResNet(object):
             with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
 
                 # Initializer filter and bias for upsampling convolution
-                x = self.pixel_shuffle_block(x)
+                x = self.pixel_shuffle_block(x, layer_scope=layer_scope)
 
         # Shape of last intermediate feature map output by the upsampling sub-pixel
         # convolution layers
@@ -118,7 +118,9 @@ class SRResNet(object):
             x = self.conv2d(filter_dims=[9, 9],
                             num_channels=3,
                             input_channels=64,
-                            strides=[1, 1, 1, 1]
+                            strides=[1, 1, 1, 1],
+                            name="conv1_1",
+                            layer_scope=layer_scope,
                             )
 
             # Shape: (batch_size, 128, 128, 3)
