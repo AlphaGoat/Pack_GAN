@@ -493,7 +493,7 @@ class Discriminator(object):
         # tag_confidences: (batch_size, num_tags)
         return forgery_score, tag_confidences
 
-    def __call_(self, x, step=0):
+    def __call__(self, x, step=0):
         """
         When model is called like a function, initiate forward pass
         """
