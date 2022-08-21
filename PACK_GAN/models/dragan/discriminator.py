@@ -51,9 +51,10 @@ class Discriminator(object):
         with tf.name_scope('initial_conv') as layer_scope:
 
             initial_kernel = WeightVariable(shape=[4, 4, 3, 32],
-                                            name='Filter_initial',
+                                            variable_name='Filter_initial',
                                             #model_scope=self.model_scope,
-                                            layer_scope=layer_scope,
+                                            layer_name=layer_scope,
+                                            scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )(step)
@@ -61,7 +62,8 @@ class Discriminator(object):
             initial_bias = BiasVariable(shape=(32,),
                                         name='bias_initial',
                                         #model_scope=self.model_scope,
-                                        layer_scope=layer_scope,
+                                        layer_name=layer_scope,
+                                        scope=layer_scope,
                                         initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )(step)
