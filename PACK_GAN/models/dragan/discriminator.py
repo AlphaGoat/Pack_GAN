@@ -54,7 +54,7 @@ class Discriminator(object):
                                             name='Filter_initial',
                                             #model_scope=self.model_scope,
                                             layer_scope=layer_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )(step)
 
@@ -62,7 +62,7 @@ class Discriminator(object):
                                         name='bias_initial',
                                         #model_scope=self.model_scope,
                                         layer_scope=layer_scope,
-                                        initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )(step)
 
@@ -80,14 +80,14 @@ class Discriminator(object):
                 res_kernel1 = WeightVariable(shape=[3, 3, 32, 32],
                                               name='res1_filter1',
                                               model_scope=self.model_scope,
-                                              initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                              initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
                                               )
 
                 res_bias1 = BiasVariable(shape=(32,),
                                           name='res1_bias1',
                                           model_scope=self.model_scope,
-                                          initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                          initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
 
@@ -101,14 +101,14 @@ class Discriminator(object):
                 res_kernel2 = WeightVariable(shape=[3, 3, 32, 32],
                                               name='res1_filter2',
                                               model_scope=self.model_scope,
-                                              initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                              initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
                                               )
 
                 res_bias2 = BiasVariable(shape=(32,),
                                           name='res1_bias2',
                                           model_scope=self.model_scope,
-                                          initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                          initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
 
@@ -128,14 +128,14 @@ class Discriminator(object):
             bridge1_kernel = WeightVariable(shape=[4, 4, 32, 64],
                                             name='bridge1_kernel',
                                             model_scope=self.model_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge1_bias = BiasVariable(shape=(64,),
                                        name='bridge_bias',
                                        model_scope=self.model_scope,
-                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                   stddev=0.02)
                                        )
 
@@ -152,14 +152,14 @@ class Discriminator(object):
                 resblock2_kernel1 = WeightVariable(shape=[3, 3, 64, 64],
                                                    name='resblock2_kernel1_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
                 resblock2_bias1 = BiasVariable(shape=(64,),
                                                name='resblock2_bias1_pass{}'.format(i),
                                                model_scope=self.model_scope,
-                                               initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
 
@@ -174,14 +174,14 @@ class Discriminator(object):
                 resblock2_kernel2 = WeightVariable(shape=[3, 3, 64, 64],
                                                    name='resblock2_kernel2_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
                 resblock2_bias2 = BiasVariable(Shape=(64,),
                                                name='resblock2_bias2_pass{}'.format(i),
                                                model_scope=self.model_scope,
-                                               initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
 
@@ -200,7 +200,7 @@ class Discriminator(object):
             bridge2_kernel = WeightVariable(shape=[4, 4, 64, 128],
                                             name='bridge2_kernel',
                                             model_scope=self.model_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
@@ -225,14 +225,14 @@ class Discriminator(object):
                     resblock3_kernel1 = WeightVariable(shape=[3, 3, 128, 128],
                                                        name='resblock3_kernel1_pass{}'.format(i),
                                                        model_scope=self.model_scope,
-                                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock3_bias1 = BiasVariable(shape=(128,),
                                                    name='resblock3_bias1_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -247,14 +247,14 @@ class Discriminator(object):
                     resblock3_kernel2 = WeightVariable(shape=[3, 3, 128, 128],
                                                        name='resblock3_kernel2_pass{}'.format(i),
                                                        model_scope=self.model_scope,
-                                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock3_bias2 = BiasVariable(shape=(128,),
                                                    name='resblock3_bias2_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -275,14 +275,14 @@ class Discriminator(object):
             bridge3_kernel = WeightVariable(shape=[3, 3, 128, 256],
                                             name='bridge3_kernel',
                                             model_scope=self.model_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge3_bias = BiasVariable(shape=(256,),
                                         name='bridge3_bias',
                                         model_scope=self.model_scope,
-                                        initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )
 
@@ -300,14 +300,14 @@ class Discriminator(object):
                     resblock4_kernel1 = WeightVariable(shape=[3, 3, 256, 256],
                                                        name='resblock4_kernel1_pass{}'.format(i),
                                                        model_scope=self.model_scope,
-                                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock4_bias1 = BiasVariable(shape=(256,),
                                                    name='resblock4_bias1_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -328,7 +328,7 @@ class Discriminator(object):
                     resblock4_bias2 = BiasVariable(shape=(256,),
                                                    name='resblock4_bias2_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -349,14 +349,14 @@ class Discriminator(object):
             bridge4_kernel = WeightVariable(shape=[3, 3, 256, 512],
                                             name='bridge_conv_layer4_kernel',
                                             model_scope=self.model_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
             bridge4_bias = BiasVariable(shape=(512,),
                                         name='bridge_conv_layer4_bias',
                                         model_scope=self.model_scope,
-                                        initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
                                         )
 
@@ -373,14 +373,14 @@ class Discriminator(object):
                     resblock5_kernel1 = WeightVariable(shape=[3, 3, 512, 512],
                                                        name='resblock5_kernel1_pass{}'.format(i),
                                                        model_scope=self.model_scope,
-                                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock5_bias1 = BiasVariable(shape=(512,),
                                                    name='resblock5_bias1_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -395,14 +395,14 @@ class Discriminator(object):
                     resblock5_kernel2 = WeightVariable(shape=[3, 3, 512, 512],
                                                        name='resblock5_kernel1_pass{}'.format(i),
                                                        model_scope=self.model_scope,
-                                                       initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
                                                        )
 
                     resblock5_bias2 = BiasVariable(shape=(512,),
                                                    name='resblock5_bias2_pass{}'.format(i),
                                                    model_scope=self.model_scope,
-                                                   initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )
 
@@ -422,14 +422,14 @@ class Discriminator(object):
             final_kernel = WeightVariable(shape=[3, 3, 512, 1024],
                                           name='final_conv_layer_filter',
                                           model_scope=self.model_scope,
-                                          initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                          initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )
 
             final_bias = BiasVariable(shape=(1024,),
                                       name='final_conv_layer_bias',
                                       model_scope=self.model_scope,
-                                      initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                      initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                  stddev=0.02)
                                      )
 
@@ -449,14 +449,14 @@ class Discriminator(object):
             forgery_score_weights = WeightVariable(shape=[flattened_shape, 1],
                                                  name='forgery_score_weights',
                                                  model_scope=self.model_scope,
-                                                 initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                 initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                             stddev=0.02)
                                                  )
 
             forgery_score_bias = BiasVariable(shape=(1,),
                                             name='forgery_score_bias',
                                             model_scope=self.model_scope,
-                                            initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
                                             )
 
@@ -471,14 +471,14 @@ class Discriminator(object):
             tag_confidence_weights = WeightVariable(shape=[flattened_shape, self.num_tags],
                                                     name='tag_confidence_weights',
                                                     model_scope=self.model_scope,
-                                                    initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                stddev=0.02)
                                                     )
 
             tag_confidence_bias = BiasVariable(shape=(self.num_tags,),
                                                name='tag_confidence_bias',
                                                model_scope=self.model_scope,
-                                               initializer=tf.initializer.TruncatedNormal(mean=0.0,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
                                                )
 
