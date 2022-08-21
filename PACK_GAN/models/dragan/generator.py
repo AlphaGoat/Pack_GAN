@@ -246,6 +246,7 @@ class SRResNet(object):
                         filter_dims=[3, 3],
                         num_filters=256,
                         input_channels=64,
+                        name="conv1_1",
                         strides=[1, 1, 1, 1],
                         layer_scope=layer_scope)
         x = self.pixel_shuffle_x2_layer(x)
