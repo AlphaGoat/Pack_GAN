@@ -11,12 +11,12 @@ import argparse
 import os
 import sqlite3
 
-from loss.loss import DRAGANLoss
-from models.dragan.generator import SRResNet
-from models.dragan.discriminator import Discriminator
-from dataset.real_dataset_generator import DatasetGenerator
-from dataset.noise_generator import NoiseGenerator
-from utils.tensorboard_plotting import plot_images
+from PACK_GAN.loss.loss import DRAGANLoss
+from PACK_GAN.models.dragan.generator import SRResNet
+from PACK_GAN.models.dragan.discriminator import Discriminator
+from PACK_GAN.dataset.real_dataset_generator import DatasetGenerator
+from PACK_GAN.dataset.noise_generator import NoiseGenerator
+from PACK_GAN.utils.tensorboard_plotting import plot_images
 
 
 def main(flags):
@@ -162,7 +162,6 @@ def main(flags):
                                                  beta_2=flags.beta2)
 
 
-
     # Initialize summary writer
     logdir = flags.logdir
     writer = tf.summary.create_file_writer(flags.logdir)
@@ -198,10 +197,10 @@ def main(flags):
                 real_images, real_tags = train_batch[0], train_batch[1]
 
                 # Retrieve seed for Generator
-                latent_space_noise, gen_tags = next(iter(noise_generator.get_batch()))
+                latent_space_noise, gen_tags = next(iter(noise_generator.dataset))
 
                 # concatenate latent space noise and tag vector to feed into generator
-                gen_input = tf.concat([latent_space_noise, gen_tags], axis=2)
+                gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
 
                 # Now generate fake images
                 gen_images = generator(gen_input, step=step)
@@ -216,7 +215,6 @@ def main(flags):
                 # Implement chance of switching labels for real and generated
                 # images (noisy labels)
                 chance = tf.random.uniform([1], minval=0.0, maxval=1.0, dtype=tf.float32)
-
 
                 # Calculate the losses for the generator and the discriminator
                 discriminator_loss, generator_loss = dragan_loss(real_images,
@@ -237,16 +235,16 @@ def main(flags):
                 running_discriminator_loss += discriminator_loss
                 running_generator_loss += generator_loss
 
-                # Every 1000th step, display statistics
-                if step % 1000 == 0:
+                # Every 100th step, display statistics
+                if step % 100 == 0:
 
                     # log running loss for discriminator
                     writer.add_scalar('training_discriminator_loss',
-                                      running_discriminator_loss / 1000,
+                                      running_discriminator_loss / 100,
                                       epoch * len(train_data_generator) + step)
 
                     writer.add_scalar('training_generator_loss',
-                                      running_generator_loss / 1000,
+                                      running_generator_loss / 100,
                                       epoch * len(train_data_generator) + step)
 
                     # Select a real image and a generated image to plot, as well
@@ -314,16 +312,16 @@ def main(flags):
                 running_discriminator_loss += discriminator_loss
                 running_generator_loss += generator_loss
 
-                # Every 1000th step, display statistics
-                if step % 1000 == 0:
+                # Every 100th step, display statistics
+                if step % 100 == 0:
 
                     # log running loss for discriminator
                     writer.add_scalar('validation_discriminator_loss',
-                                      running_discriminator_loss / 1000,
+                                      running_discriminator_loss / 100,
                                       epoch * len(valid_data_generator) + step)
 
                     writer.add_scalar('validation_generator_loss',
-                                      running_generator_loss / 1000,
+                                      running_generator_loss / 100,
                                       epoch * len(valid_data_generator) + step)
 
                     # Select a real image and a generated image to plot, as well
@@ -393,16 +391,16 @@ def main(flags):
                 running_discriminator_loss += discriminator_loss
                 running_generator_loss += generator_loss
 
-                # Every 1000th step, display statistics
-                if step % 1000 == 0:
+                # Every 100th step, display statistics
+                if step % 100 == 0:
 
                     # log running loss for discriminator
                     writer.add_scalar('testing_discriminator_loss',
-                                      running_discriminator_loss / 1000,
+                                      running_discriminator_loss / 100,
                                       epoch * len(test_data_generator) + step)
 
                     writer.add_scalar('testing_generator_loss',
-                                      running_generator_loss / 1000,
+                                      running_generator_loss / 100,
                                       epoch * len(test_data_generator) + step)
 
                     # Select a real image and a generated image to plot, as well
@@ -444,12 +442,12 @@ if __name__ == '__main__':
                         help="Number of tags to assign to generated imagery")
 
     parser.add_argument('--learning_rate', type=float,
-                        default=2e-4,
+                        default=1e-3,
                         help="Learning rate for models"
                         )
 
     parser.add_argument('--decay_steps', type=int,
-                        default=50e3,
+                        default=50000,
                         help="""Number of training iterations to complete before
                                 exponential decay of learning rate for models
                              """
@@ -472,11 +470,11 @@ if __name__ == '__main__':
                         help="Number of images to be used in final testing loop")
 
     parser.add_argument('--num_valid_images', type=int,
-                        default=10e3,
+                        default=10000,
                         help="Number of images to be used in full validation loop")
 
     parser.add_argument('--num_train_images', type=int,
-                        default=50e3,
+                        default=50000,
                         help="Number of images to be used in full training loop")
 
     parser.add_argument('--logdir', type=str,

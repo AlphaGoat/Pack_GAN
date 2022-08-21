@@ -26,7 +26,7 @@ class DatasetGenerator(object):
                  label_smoothing=False,
                  encoding_function=None,
                  return_filename=False,
-                 image_reshape=False):
+                 resize_image=True):
         """
         :param tfrecord_name: file path of tfrecord we will be reading
                               from
@@ -52,7 +52,7 @@ class DatasetGenerator(object):
         self.label_smoothing = label_smoothing
         self.encoding_function = encoding_function
         self.return_filename = return_filename
-        self.image_reshape = image_reshape
+        self.resize_image = resize_image
         self.dataset = self.build_pipeline(tfrecord_name,
                                            batch_size,
                                            self.num_threads,
@@ -94,8 +94,8 @@ class DatasetGenerator(object):
         if self.encoding_function is not None:
             data = data.map(self.encoding_function, num_parallel_calls=num_threads)
 
-        if self.reshape_images:
-            data = data.map(self.reshape_images, num_parallel_calls=num_threads)
+        if self.resize_images:
+            data = data.map(self.resize_images, num_parallel_calls=num_threads)
 
         if cache_dataset_memory:
             data = data.cache()
@@ -177,9 +177,9 @@ class DatasetGenerator(object):
         else:
             return images, tags
 
-    def reshape_images(self, *args):
+    def resize_images(self, *args):
         images = args[0]
-        images = tf.reshape(images, self.image_shape)
+        images = tf.image.resize(images, self.image_shape[:2])
 
         if len(args) == 3:
             return images, args[1], args[2]

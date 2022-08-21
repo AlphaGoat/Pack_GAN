@@ -129,19 +129,21 @@ class BatchNormalization(object):
         """
         # Tensor for offset parameters
         self.t_beta = WeightVariable(
-                            shape=(param_shape,),
-                            name='offset_tensor',
-                            initializer=tf.zeros,
-                            summary_update_freq=self.summary_update_freq,
-                            )
+            shape=(param_shape,),
+            variable_name='offset_tensor',
+            layer_name="batch_normalization",
+            initializer=tf.zeros,
+            summary_update_freq=self.summary_update_freq,
+        )
 
         # Tensor for scaling parameters
         self.t_gamma = WeightVariable(
-                            shape=(param_shape,),
-                            name='scale_tensor',
-                            initializer=tf.zeros,
-                            summary_update_freq=self.summary_update_freq,
-                            )
+            shape=(param_shape,),
+            variable_name='scale_tensor',
+            layer_name="batch_normalization",
+            initializer=tf.zeros,
+            summary_update_freq=self.summary_update_freq,
+        )
 
     def __call__(self, x, step=0):
 
@@ -171,22 +173,25 @@ class WeightVariable(tf.Module):
     """
     def __init__(self,
                  shape,
-                 name,
-                 #model_scope,
-                 layer_scope,
+                 variable_name,
+                 layer_name,
+                 scope=None,
                  initializer=tf.initializers.zeros,
                  summary_update_freq=None,
                  ):
-        super(WeightVariable, self).__init__(name=name)
+        super(WeightVariable, self).__init__(name=variable_name)
 
         # Shape of initializer parameter tensor
         self.shape = shape
 
         # Variables to keep track of variable name space
-        self.name = name
+        self.name = variable_name
 
         # variable to keep track of the scope the variable falls under
-        self.layer_scope = layer_scope
+        self.layer_name = layer_name
+
+        # Scope that the variable is being defined under
+        self.scope = scope
 
         # our intitializer
         self.initializer = initializer
@@ -205,13 +210,14 @@ class WeightVariable(tf.Module):
             self.initial = tf.Variable(
                 self.initializer(self.shape),
                 trainable=True,
-                name=self.name,
+                name=self.layer_name + ":" + self.name,
                 dtype=tf.float32,
                 )
             self._initialized = True
-            print("initial.name: ", self.initial.name)
-            assert self.initial.name == "%s%s:0" % (self.layer_scope, self.name)
-
+            if self.scope is None:
+                assert self.initial.name == "%s:%s:0" % (self.layer_name, self.name)
+            else:
+                assert self.initial.name == "%s%s:%s:0" % (self.scope, self.layer_name, self.name)
         # create summaries for updated weights
         if self.summary_update_freq:
             if step % self.summary_update_freq == 0:
@@ -225,21 +231,25 @@ class BiasVariable(tf.Module):
     """
     def __init__(self,
                  shape,
-                 name,
-                 layer_scope,
+                 variable_name,
+                 layer_name,
+                 scope=None,
                  initializer=tf.initializers.zeros,
                  summary_update_freq=None,
                  ):
-        super(BiasVariable, self).__init__(name=name)
+        super(BiasVariable, self).__init__(name=variable_name)
 
         # Variable keeping track of shape of initializer parameter tensor
         self.shape = shape
 
         # Variables keeping track of variable name space
-        self.name = name
+        self.name = variable_name
 
-        # variable to keep track of the scope the variable falls under
-        self.layer_scope = layer_scope
+        # Name of the model layer this variable is being initialized for
+        self.layer_name = layer_name
+
+        # parameter keeping track of the current scope the variable falls under
+        self.scope = scope
 
         # If no initializer is provided, initialize params as zeros
         self.initializer = initializer
@@ -257,13 +267,17 @@ class BiasVariable(tf.Module):
             self.initial = tf.Variable(
                 self.initializer(self.shape),
                 trainable=True,
-                name=self.name,
+                name=self.layer_name + ":" + self.name,
                 dtype=tf.float32,
                 )
 
             self._initialized = True
 
-            assert self.initial.name == "%s%s:0" % (self.layer_scope, self.name)
+            if self.scope is None:
+                assert self.initial.name == "%s:%s:0" % (self.layer_name, self.name)
+            else:
+                assert self.initial.name == "%s%s:%s:0" % (self.scope, self.layer_name, self.name)
+
 
         # Call variable_summaries for updated weights
         if self.summary_update_freq:

@@ -11,7 +11,7 @@ Peter J. Thomas
 """
 import tensorflow as tf
 
-from models.layers import WeightVariable, BiasVariable
+from PACK_GAN.models.layers import WeightVariable, BiasVariable
 
 class Discriminator(object):
 

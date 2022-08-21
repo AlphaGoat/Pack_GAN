@@ -12,7 +12,7 @@ Peter J. Thomas
 
 import tensorflow as tf
 
-from models.layers import WeightVariable, BiasVariable, BatchNormalization
+from PACK_GAN.models.layers import WeightVariable, BiasVariable, BatchNormalization
 
 class SRResNet(object):
 
@@ -66,9 +66,9 @@ class SRResNet(object):
         # Batch Normalization
         batch_norm_out_fc1 = BatchNormalization(
                                         name='BatchNorm_fc1',
-                                        layer_scope=layer_scope,
+#                                        layer_scope=layer_scope,
                                         summary_update_freq=self.variable_summary_update_freq,
-                                        )(out_fc1, step)
+                                        )(x, step)
 
         # Activation of output
         act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
@@ -89,7 +89,7 @@ class SRResNet(object):
                                   num_filters=64,
                                   input_channels=64,
                                   strides=[1, 1, 1, 1],
-                                  name="residual_block{}".format(i)
+                                  layer_scope=layer_scope
                                   )
          # Shape: (batch_Size, 16, 16, 64)
         x = tf.nn.batch_normalization(x,
@@ -135,9 +135,9 @@ class SRResNet(object):
         # Weight variable
         weight_shape = (input_shape, output_shape)
         W_fc1 = WeightVariable(shape=weight_shape,
-                               name='W_fc1',
+                               variable_name='W_fc1',
                                #model_scope=self.model_scope,
-                               layer_scope=layer_name,
+                               layer_name=layer_name,
                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                           stddev=0.02),
                                summary_update_freq=self.variable_summary_update_freq,
@@ -146,16 +146,17 @@ class SRResNet(object):
         # Initialize bias variable
         # Shape: (batch_size, 64 * 16 * 16)
         b_fc1 = BiasVariable(shape=(output_shape,),
-                            name='b_fc1',
-                            #model_scope=self.model_scope,
-                            layer_scope=layer_name,
-                            initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                       stddev=0.02),
-                            summary_update_freq=self.variable_summary_update_freq,
-                            )(step)
+                             variable_name='b_fc1',
+                             #model_scope=self.model_scope,
+                             layer_name=layer_name,
+                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                        stddev=0.02),
+                             summary_update_freq=self.variable_summary_update_freq,
+                             )(step)
 
         # Implement dense layer:
         out_fc1 = tf.nn.bias_add(tf.matmul(x, W_fc1), b_fc1)
+        return out_fc1
 
     def conv2d(self,
                x,
@@ -167,7 +168,7 @@ class SRResNet(object):
                layer_scope=None,
                step=0):
 
-        assert filter_dims == 1 or filter_dims == 2
+        assert len(filter_dims) == 1 or len(filter_dims) == 2
         if len(filter_dims) == 2: dim_x, dim_y = filter_dims
         else: dim_x = dim_y = filter_dims
 
@@ -175,17 +176,19 @@ class SRResNet(object):
                                                              stddev=0.02)
 
         filter_shape = [dim_x, dim_y, input_channels, num_filters]
-        kernel_name = name + '_kernel'
+        kernel_name = 'kernel'
         kernel = WeightVariable(shape=filter_shape,
-                                name=kernel_name,
-                                layer_scope=layer_scope,
+                                variable_name=kernel_name,
+                                layer_name=name,
+                                scope=layer_scope,
                                 initializer=weight_initializer,
                                 )(step)
 
-        bias_name = name + '_bias'
+        bias_name = 'bias'
         bias = BiasVariable(shape=(num_filters,),
-                            name=name,
-                            layer_scope=layer_scope,
+                            variable_name=bias_name,
+                            layer_name=name,
+                            scope=layer_scope,
                             initializer=weight_initializer)(step)
 
         fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
@@ -198,17 +201,19 @@ class SRResNet(object):
                  filter_dims,
                  num_filters,
                  input_channels,
-                 name,
+                 layer_scope,
+#                 name,
                  strides=[1, 1, 1, 1],
-                 layer_scope=None,
+#                 layer_scope=None,
                  step=0):
 
         # Store input as residual
         res_input = x
 
         # First Convolution
-        x = self.conv2d(filter_dims, num_filters, input_channels,
-                        name=name, strides=strides, layer_scope=layer_scope)
+        x = self.conv2d(x, filter_dims, num_filters, input_channels,
+                        name="conv1_1", strides=strides, layer_scope=layer_scope,
+                        step=step)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
                                       variance=1.0,
@@ -219,7 +224,8 @@ class SRResNet(object):
 
         # Second Convolution
         x = self.conv2d(filter_dims, num_filters, input_channels,
-                        name=name, strides=strides, layer_scope=layer_scope)
+                        name="conv1_2", strides=strides, layer_scope=layer_scope,
+                        step=step)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
                                       variance=1.0,

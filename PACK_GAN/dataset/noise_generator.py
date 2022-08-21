@@ -30,12 +30,13 @@ class NoiseGenerator(object):
         self.encoding_function = encoding_function
 
         # build noise pipeline
-        self.dataset = self.build_pipeline(self.batch_size,
-                                           self.latent_space_vector_dim,
-                                           self.num_tags,
-                                           self.num_threads,
-                                           self.buffer,
-                                           )
+        self.dataset = self.build_pipeline(
+            self.batch_size,
+            self.latent_space_vector_dim,
+            self.num_tags,
+            self.num_threads,
+            self.buffer,
+        )
 
     def build_pipeline(self,
                        batch_size,
@@ -46,9 +47,19 @@ class NoiseGenerator(object):
                        preprocess=False,
                        ):
 
-        data = tf.data.Dataset.from_generator(self.generate_random_noise,
-                                             (tf.float32, tf.float32),
-                                             (latent_space_vector_dim, num_tags))
+        data = tf.data.Dataset.from_generator(
+            self.generate_random_noise,
+            output_signature=(
+                tf.TensorSpec(
+                    shape=(self.latent_space_vector_dim,),
+                    dtype=tf.float32
+                ),
+                tf.TensorSpec(
+                    shape=(self.num_tags,),
+                    dtype=tf.float32
+                ),
+            )
+        )
 
         # Perform additional preprocessing to generated noise
         if preprocess:

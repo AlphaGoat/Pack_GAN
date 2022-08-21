@@ -6,53 +6,66 @@ from tensorflow.keras.initializers import RandomNormal
 
 def initialize_discriminator(discriminator_input, num_tags):
 #    discriminator_input = tf.keras.Input(shape=(input_shape))
-    x = tf.keras.layers.Conv2d(32, 4, strides=2,
-                               activation="leaky_relu",
+    print("(pjt) discriminator_input: ", discriminator_input.get_shape())
+    x = tf.keras.layers.Conv2D(32, 4, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(discriminator_input)
+    print("(pjt): 35", x.get_shape())
     x = ResBlock(3, 32)(x)
     x = ResBlock(3, 32)(x)
-    x = tf.keras.layers.Conv2d(64, 4, strides=2,
-                               activation="leaky_relu",
+    x = tf.keras.layers.Conv2D(64, 4, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(x)
+    print("(pjt): 35", x.get_shape())
     x = ResBlock(3, 64)(x)
     x = ResBlock(3, 64)(x)
-    x = tf.keras.layers.Conv2d(128, 4, strides=2,
-                               activation="leaky_relu",
+    x = tf.keras.layers.Conv2D(128, 4, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(x)
+    print("(pjt): 35", x.get_shape())
     x = ResBlock(3, 128)(x)
     x = ResBlock(3, 128)(x)
-    x = tf.keras.layers.Conv2d(256, 3, strides=2,
-                               activation="leaky_relu",
+    x = tf.keras.layers.Conv2D(256, 3, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(x)
+    print("(pjt): 35", x.get_shape())
     x = ResBlock(3, 256)(x)
     x = ResBlock(3, 256)(x)
-    x = tf.keras.layers.Conv2d(512, 3, strides=2,
-                               activation="leaky_relu",
+    x = tf.keras.layers.Conv2D(512, 3, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(x)
+    print("(pjt): 43", x.get_shape())
     x = ResBlock(3, 512)(x)
     x = ResBlock(3, 512)(x)
-    x = tf.keras.layers.Conv2d(1024, 3, strides=2,
-                               activation="leaky_relu",
+    x = tf.keras.layers.Conv2D(1024, 3, strides=2,
+                               padding='same',
+                               activation=tf.keras.layers.LeakyReLU(),
                                kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                )(x)
+    print("(pjt): 51", x.get_shape())
 
     forgery_score = tf.keras.layers.Dense(1, activation="sigmoid",
                                           kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                           bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                           )(x)
 
-    tag_scores = tf.keras.layers.Dense(num_tags, activation="signmoid",
+    tag_scores = tf.keras.layers.Dense(num_tags, activation="sigmoid",
                                        kernel_initializer=RandomNormal(mean=0, stddev=0.02),
                                        bias_initializer=RandomNormal(mean=0, stddev=0.02),
                                        )(x)
@@ -68,14 +81,16 @@ class ResBlock(layers.Layer):
         self.num_filters = num_filters
 
     def build(self, input_shape):
-        self.conv_layer1 = tf.keras.layers.Conv2d(self.num_filters, self.filter_shape,
+        self.conv_layer1 = tf.keras.layers.Conv2D(self.num_filters, self.filter_shape,
                                                   strides=1,
-                                                  activation="leaky_relu",
+                                                  padding='same',
+                                                  activation=tf.keras.layers.LeakyReLU(),
                                                   kernel_initializer=RandomNormal(mean=0,stddev=0.02),
                                                   bias_initializer=RandomNormal(mean=0,stddev=0.02),
                                                   )
-        self.conv_layer2 = tf.keras.layers.Conv2d(self.num_filters, self.filter_shape,
+        self.conv_layer2 = tf.keras.layers.Conv2D(self.num_filters, self.filter_shape,
                                                   strides=1,
+                                                  padding='same',
                                                   kernel_initializer=RandomNormal(mean=0,stddev=0.02),
                                                   bias_initializer=RandomNormal(mean=0,stddev=0.02),
                                                   )

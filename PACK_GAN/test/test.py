@@ -31,7 +31,19 @@ def main(flags):
     # Shows what operations are assigned to what device
     tf.debugging.set_log_device_placement(True)
 
+    # Turning on memory growth
+    # https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth
     gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs, ", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
 
     # I've been having a bug where TF fails to fetch the convolution algorithm
     # (a pretty big deal with any CNN architecture). I'm not sure if it has to do
@@ -56,6 +68,7 @@ def main(flags):
     image_width = flags.image_pixel_width
     image_height = flags.image_pixel_height
     num_channels = flags.image_channels
+    input_shape = [image_height, image_width, num_channels]
 
     train_data_generator = DatasetGenerator(train_tfrecord_name,
                                             num_train_images,
@@ -129,7 +142,7 @@ def main(flags):
 #    Generator.compile(optimizer=optimizer)
 #    Generator.summary()
 
-    disc_input = tf.keras.Input(shape=(flags.input_shape))
+    disc_input = tf.keras.Input(shape=(input_shape))
     forgery_score, tag_scores = initialize_discriminator(disc_input, flags.num_tags)
     Discriminator = Model(disc_input, [forgery_score, tag_scores],
                                    name="Discriminator")
@@ -145,11 +158,12 @@ def main(flags):
 #    GAN.compile(loss=loss, optimizer=optimizer)
 #    GAN.summary()
 
-    for e in range(flags.epochs):
+    for e in range(flags.num_epochs):
 
-        for step in range(flags.num_train_images / flags.batch_size):
+        for step in range(flags.num_train_images // flags.train_batch_size):
+
             # Get latent space vector noise
-            noise = noise_generator.get_batch()
+            noise = noise_generator.generate_random_noise()
 
             # Generate fake imagery from noised input
             generated_images = Generator.predict(noise)
@@ -174,6 +188,49 @@ def main(flags):
                                                           tag_scores_real,
                                                           tag_scores_gen,
                                                           )
+
+            # Use the gradient tape to automatically retrieve
+            # the gradients of the trainable variables with respect to the loss
+            disc_grads = tape.gradient(discriminator_loss, Discriminator.trainable_weights)
+            gen_grads = tape.gradient(generator_loss, Generator.trainable_weights)
+
+            # Run one step of gradient descent by updating the value of the bariables to
+            # minimize loss
+            disc_optimizer.apply_gradients(zip(disc_grads, Discriminator.trainable_weights))
+            gen_optimizer.apply_gradients(zip(gen_grads, Generator.trainable_weights))
+
+            # Log every 200 batches
+            if step % 200 == 0:
+                print(
+                    "Training Discriminator loss (for one batch) at step %d: %.4f"
+                    % (step, float(discriminator_loss)))
+                print(
+                    "Training Generator loss (for one batch) at step %d: %.4f"
+                    % (step, float(generator_loss)))
+                print("Seen so far: %s samples" % ((step + 1) * 64))
+
+        # Validation step
+        for step in range(flags.num_valid_images / flags.valid_batch_size):
+            # Get latent space vector noise
+            noise = noise_generator.get_batch()
+
+            # Generate fake imagery from noised input
+            generated_images = Generator.predict(noise)
+
+            #Get a random set of real imagery
+            image_batch = train_data_generator.get_batch()
+
+            y_real, tag_scores_real = Discriminator.train_on_batch(image_batch)
+            y_gen, tag_scores_gen = Discriminator.train_on_batch(generated_images)
+
+            # Calculate loss for generator and discriminator
+            discriminator_loss, generator_loss = loss(image_batch,
+                                                      generated_images,
+                                                      y_real,
+                                                      y_gen,
+                                                      tag_scores_real,
+                                                      tag_scores_gen,
+                                                      )
 
             # Use the gradient tape to automatically retrieve
             # the gradients of the trainable variables with respect to the loss
