@@ -195,7 +195,6 @@ def main(flags):
 #                train_batch = train_iterator.get_next()
                 train_batch = next(iter(train_data_generator.dataset))
                 real_images, real_tags = train_batch[0], train_batch[1]
-                import pdb; pdb.set_trace()
 
                 # Retrieve seed for Generator
                 latent_space_noise, gen_tags = next(iter(noise_generator.dataset))
