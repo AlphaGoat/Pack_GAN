@@ -311,60 +311,60 @@ class Discriminator(object):
             residual_input = act_bridge3_fm = tf.nn.leaky_relu(bridge3_fm)
 
         # Initialize 4th ResBlock
-        with tf.name_scope('(k3n256s1) ResBlock4') as block_scope:
-            for i in range(1,3):
-                with tf.name_scope('ResBlock4 pass{}'.format(i)) as layer_scope:
+#        with tf.name_scope('(k3n256s1) ResBlock4') as block_scope:
+        for i in range(1,3):
+            with tf.name_scope('ResBlock4 pass{}'.format(i)) as layer_scope:
 
-                    # 1st Conv Layer
-                    resblock4_kernel1 = WeightVariable(shape=[3, 3, 256, 256],
-                                                       variable_name='resblock4_kernel1_pass{}'.format(i),
-                                                       layer_name=layer_scope,
-                                                       scope=block_scope + layer_scope,
-                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                                  stddev=0.02)
-                                                       )(step)
-
-                    resblock4_bias1 = BiasVariable(shape=(256,),
-                                                   variable_name='resblock4_bias1_pass{}'.format(i),
+                # 1st Conv Layer
+                resblock4_kernel1 = WeightVariable(shape=[3, 3, 256, 256],
+                                                   variable_name='resblock4_kernel1_pass{}'.format(i),
                                                    layer_name=layer_scope,
-                                                   scope=block_scope + layer_scope,
+                                                   scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )(step)
 
+                resblock4_bias1 = BiasVariable(shape=(256,),
+                                               variable_name='resblock4_bias1_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                                          stddev=0.02)
+                                               )(step)
 
-                    resblock4_fm1 = tf.nn.conv2d(residual_input, resblock4_kernel1,
-                                                 strides=[1, 1, 1, 1], padding='SAME')
 
-                    bias_resblock4_fm1 = tf.nn.bias_add(resblock4_fm1, resblock4_bias1)
+                resblock4_fm1 = tf.nn.conv2d(residual_input, resblock4_kernel1,
+                                             strides=[1, 1, 1, 1], padding='SAME')
 
-                    # 2nd Conv layer
-                    resblock4_kernel2 = WeightVariable(shape=[3, 3, 256, 256],
-                                                       variable_name='resblock4_kernel2_pass{}'.format(i),
-                                                       layer_name=layer_scope,
-                                                       scope=block_scope + layer_scope,
-                                                       initializer=tf.initiializer.TruncatedNormal(mean=0.0,
-                                                                                                   stddev=0.02)
-                                                       )(step)
+                bias_resblock4_fm1 = tf.nn.bias_add(resblock4_fm1, resblock4_bias1)
 
-                    resblock4_bias2 = BiasVariable(shape=(256,),
-                                                   variable_name='resblock4_bias2_pass{}'.format(i),
+                # 2nd Conv layer
+                resblock4_kernel2 = WeightVariable(shape=[3, 3, 256, 256],
+                                                   variable_name='resblock4_kernel2_pass{}'.format(i),
                                                    layer_name=layer_scope,
-                                                   scope=block_scope + layer_scope,
-                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                              stddev=0.02)
+                                                   scope=layer_scope,
+                                                   initializer=tf.initiializer.TruncatedNormal(mean=0.0,
+                                                                                               stddev=0.02)
                                                    )(step)
 
-                    resblock4_fm2 = tf.nn.conv2d(bias_resblock4_fm1, resblock4_kernel2,
-                                                 strides=[1, 1, 1, 1], padding='SAME')
+                resblock4_bias2 = BiasVariable(shape=(256,),
+                                               variable_name='resblock4_bias2_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                                          stddev=0.02)
+                                               )(step)
+
+                resblock4_fm2 = tf.nn.conv2d(bias_resblock4_fm1, resblock4_kernel2,
+                                             strides=[1, 1, 1, 1], padding='SAME')
 
 
-                    # Perform elementwise sum with input to ResBlock (i.e., output to
-                    # bridge conv layer or previous ResBlock)
-                    elementwise_sum_resblock4 = tf.add(resblock4_fm2, residual_input)
+                # Perform elementwise sum with input to ResBlock (i.e., output to
+                # bridge conv layer or previous ResBlock)
+                elementwise_sum_resblock4 = tf.add(resblock4_fm2, residual_input)
 
-                    # Final activation in ResBlock
-                    residual_output = residual_input = tf.nn.leaky_relu(elementwise_sum_resblock4)
+                # Final activation in ResBlock
+                residual_output = residual_input = tf.nn.leaky_relu(elementwise_sum_resblock4)
 
 
         # ..."Hey, look at that... 4th bridge layer
@@ -391,60 +391,60 @@ class Discriminator(object):
             act_bridge4_fm = residual_input = tf.nn.leaky_relu(bridge4_fm)
 
         # And a wild 5th ResBlock (the last one, I promise) appears
-        with tf.name_scope('(k3n512s1) ResBlock5') as block_scope:
-            for i in range(1, 3):
-                with tf.name_scope('(k3n512s1) ResBlock5_pass{}.'.format(i)) as layer_scope:
-                    # 1st Conv layer
-                    resblock5_kernel1 = WeightVariable(shape=[3, 3, 512, 512],
-                                                       variable_name='resblock5_kernel1_pass{}'.format(i),
-                                                       layer_name=layer_scope,
-                                                       scope=block_scope + layer_scope,
-                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                                  stddev=0.02)
-                                                       )(step)
-
-                    resblock5_bias1 = BiasVariable(shape=(512,),
-                                                   variable_name='resblock5_bias1_pass{}'.format(i),
+#        with tf.name_scope('(k3n512s1) ResBlock5') as block_scope:
+        for i in range(1, 3):
+            with tf.name_scope('(k3n512s1) ResBlock5_pass{}.'.format(i)) as layer_scope:
+                # 1st Conv layer
+                resblock5_kernel1 = WeightVariable(shape=[3, 3, 512, 512],
+                                                   variable_name='resblock5_kernel1_pass{}'.format(i),
                                                    layer_name=layer_scope,
-                                                   scope=block_scope + layer_scope,
+                                                   scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )(step)
 
-                    resblock5_fm1 = tf.nn.conv2d(residual_input, resblock5_kernel1,
-                                                 strides=[1, 1, 1, 1], padding='SAME')
+                resblock5_bias1 = BiasVariable(shape=(512,),
+                                               variable_name='resblock5_bias1_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                                          stddev=0.02)
+                                               )(step)
 
-                    resblock5_bias_fm1 = tf.nn.bias_add(resblock5_fm1, resblock5_bias1)
+                resblock5_fm1 = tf.nn.conv2d(residual_input, resblock5_kernel1,
+                                             strides=[1, 1, 1, 1], padding='SAME')
 
-                    resblock5_act_fm1 = tf.nn.leaky_relu(resblock5_bias_fm1)
+                resblock5_bias_fm1 = tf.nn.bias_add(resblock5_fm1, resblock5_bias1)
 
-                    # 2nd Conv layer
-                    resblock5_kernel2 = WeightVariable(shape=[3, 3, 512, 512],
-                                                       variable_name='resblock5_kernel1_pass{}'.format(i),
-                                                       layer_name=layer_scope,
-                                                       scope=block_scope + layer_scope,
-                                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
-                                                                                                  stddev=0.02)
-                                                       )(step)
+                resblock5_act_fm1 = tf.nn.leaky_relu(resblock5_bias_fm1)
 
-                    resblock5_bias2 = BiasVariable(shape=(512,),
-                                                   variable_name='resblock5_bias2_pass{}'.format(i),
+                # 2nd Conv layer
+                resblock5_kernel2 = WeightVariable(shape=[3, 3, 512, 512],
+                                                   variable_name='resblock5_kernel1_pass{}'.format(i),
                                                    layer_name=layer_scope,
-                                                   scope=block_scope + layer_scope,
+                                                   scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
                                                    )(step)
 
-                    resblock5_fm2 = tf.nn.conv2d(resblock5_act_fm1, resblock5_kernel2,
-                                                 strides=[1, 1, 1, 1], padding='SAME')
+                resblock5_bias2 = BiasVariable(shape=(512,),
+                                               variable_name='resblock5_bias2_pass{}'.format(i),
+                                               layer_name=layer_scope,
+                                               scope=layer_scope,
+                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                                          stddev=0.02)
+                                               )(step)
 
-                    resblock5_bias_fm2 = tf.nn.bias_add(resblock5_fm2, resblock5_bias2)
+                resblock5_fm2 = tf.nn.conv2d(resblock5_act_fm1, resblock5_kernel2,
+                                             strides=[1, 1, 1, 1], padding='SAME')
 
-                    # Elementwise summation with input to residual block
-                    resblock5_elementwise_sum = tf.add(resblock5_fm2, residual_input)
+                resblock5_bias_fm2 = tf.nn.bias_add(resblock5_fm2, resblock5_bias2)
 
-                    # Final activation
-                    residual5_output = residual_input = tf.nn.leaky_relu(resblock5_elementwise_sum)
+                # Elementwise summation with input to residual block
+                resblock5_elementwise_sum = tf.add(resblock5_fm2, residual_input)
+
+                # Final activation
+                residual5_output = residual_input = tf.nn.leaky_relu(resblock5_elementwise_sum)
 
         # Initialize final conv layer
         with tf.name_scope('(k3n1024s2) final_conv_layer') as layer_scope:
