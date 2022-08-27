@@ -50,12 +50,8 @@ class DRAGANLoss(object):
         # Retrieve the batch size of the sample
         batch_size = tf.shape(y_pred_real)[0]
 
-        # Check to see if the batch size of the real sample is the same
-        # as the generated sample
-        assert batch_size == tf.shape(y_pred_generated)[0]
-
         log_loss = tf.math.reduce_sum(tf.math.log(y_pred_real + offset) + \
-                                      tf.math.log(1 - y_pred_generated + offset))
+                                      tf.math.log(1 - y_pred_generated + offset), axis=1)
         norm_loss = tf.math.reduce_mean(log_loss, axis=0)
 
         return norm_loss
@@ -102,9 +98,6 @@ class DRAGANLoss(object):
 
         batch_size = tf.shape(real_component)[0]
 
-        # Ensure that the batch size of the real sample is the same as the generated sample
-        assert batch_size == tf.shape(gen_component)[0]
-
 #        real_component = (1/batch_size) * real_component
 #        gen_component = (1/batch_size) * gen_component
         real_component = tf.math.reduce_mean(real_component, axis=0)
@@ -119,7 +112,6 @@ class DRAGANLoss(object):
         # Get the batch size and check that it is the same between the real data distribution
         # and the generated distribution
         batch_size = tf.shape(x_real)[0]
-        assert batch_size == tf.shape(gen_images)[0]
 
         # randomly sample members of the 'real' data distribution and noise (generated images)
 #        flat_x = tf.reshape(x_real, [batch_size, -1])
