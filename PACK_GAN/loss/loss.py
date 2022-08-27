@@ -111,7 +111,7 @@ class DRAGANLoss(object):
         """
         # Get the batch size and check that it is the same between the real data distribution
         # and the generated distribution
-        batch_size = tf.shape(x_real)[0]
+        batch_size = tf.cast(tf.shape(x_real)[0], tf.float32)
 
         # randomly sample members of the 'real' data distribution and noise (generated images)
 #        flat_x = tf.reshape(x_real, [batch_size, -1])
