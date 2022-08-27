@@ -68,7 +68,7 @@ class Discriminator(object):
                                                                                    stddev=0.02)
                                         )(step)
 
-            feature_map = tf.nn.conv2d(x, initial_kernel, strides=[2, 2, 1, 1], padding='SAME')
+            feature_map = tf.nn.conv2d(x, initial_kernel, strides=[1, 2, 2, 1], padding='SAME')
 
             bias_feature_map = tf.bias_add(feature_map, initial_bias)
 
