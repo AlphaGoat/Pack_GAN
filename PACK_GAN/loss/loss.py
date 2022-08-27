@@ -111,7 +111,7 @@ class DRAGANLoss(object):
         """
         # Get the batch size and check that it is the same between the real data distribution
         # and the generated distribution
-        batch_size = tf.cast(tf.shape(x_real)[0], tf.float32)
+        batch_size = tf.shape(x_real)[0]
 
         # randomly sample members of the 'real' data distribution and noise (generated images)
 #        flat_x = tf.reshape(x_real, [batch_size, -1])
@@ -121,7 +121,8 @@ class DRAGANLoss(object):
 
         # Craft probability distribution for sampling real and generated inistance
         # distributions
-        probability_dist = tf.math.log(tf.ones(2 * batch_size)/(2 * batch_size))
+        probability_dist = tf.math.log(tf.ones(2 * batch_size)/
+                (2 * tf.cast(batch_size, tf.float32)))
 
         # sample from this distribution. Use the returned indices to gather elements
         # from the combined real and generated distribution
