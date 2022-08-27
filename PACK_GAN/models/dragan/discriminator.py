@@ -478,7 +478,7 @@ class Discriminator(object):
 
         # Final output layer for truth_score
         with tf.name_scope('forgery_score_output_layer') as layer_scope:
-            forgery_score_weights = WeightVariable(shape=[4 * 4 * 1024, 1],
+            forgery_score_weights = WeightVariable(shape=[4 * 1024, 1],
                                                    variable_name='forgery_score_weights',
                                                    layer_name=layer_scope,
                                                    scope=layer_scope,
@@ -494,7 +494,6 @@ class Discriminator(object):
                                                                                        stddev=0.02)
                                             )(step)
 
-            import pdb; pdb.set_trace()
             unactivated_forgery_score = tf.nn.bias_add(tf.matmul(flattened_final_fm, forgery_score_weights),
                                                     forgery_score_bias)
 
@@ -503,7 +502,7 @@ class Discriminator(object):
 
         # Final output layer for tags to assign to input image
         with tf.name_scope('tag_confidence_output_layer') as layer_scope:
-            tag_confidence_weights = WeightVariable(shape=[4 * 4 * 1024, self.num_tags],
+            tag_confidence_weights = WeightVariable(shape=[4 * 1024, self.num_tags],
                                                     variable_name='tag_confidence_weights',
                                                     layer_name=layer_scope,
                                                     scope=layer_scope,
