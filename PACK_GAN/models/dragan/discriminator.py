@@ -221,8 +221,8 @@ class Discriminator(object):
                                         variable_name='bridge2_bias',
                                         layer_name=layer_scope,
                                         scope=layer_scope,
-                                        initializer=tf.initialzier.TruncatedNormal(mean=0.0,
-                                                                                   stddev=0.02)
+                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
+                                                                                    stddev=0.02)
                                         )(step)
 
             bridge2_fm = tf.nn.conv2d(residual_output, bridge2_kernel,
