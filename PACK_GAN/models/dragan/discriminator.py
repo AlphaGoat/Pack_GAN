@@ -494,6 +494,7 @@ class Discriminator(object):
                                                                                        stddev=0.02)
                                             )(step)
 
+            import pdb; pdb.set_trace()
             unactivated_forgery_score = tf.nn.bias_add(tf.matmul(flattened_final_fm, forgery_score_weights),
                                                     forgery_score_bias)
 
