@@ -472,13 +472,13 @@ class Discriminator(object):
             final_act_fm = tf.nn.leaky_relu(final_bias_fm)
 
         # Flatten feature map for read in to final fully-connected layers
-        import pdb; pdb.set_trace()
-        flattened_shape = self.image_width * self.image_height * 1024
-        flattened_final_fm = tf.reshape(final_act_fm, [-1, flattened_shape])
+#        flattened_shape = self.image_width * self.image_height * 1024
+        flattened_final_fm = tf.keras.layers.Flatten()(final_act_fm)
+#        flattened_final_fm = tf.reshape(final_act_fm, [-1, flattened_shape])
 
         # Final output layer for truth_score
         with tf.name_scope('forgery_score_output_layer') as layer_scope:
-            forgery_score_weights = WeightVariable(shape=[flattened_shape, 1],
+            forgery_score_weights = WeightVariable(shape=[4 * 4 * 1024, 1],
                                                    variable_name='forgery_score_weights',
                                                    layer_name=layer_scope,
                                                    scope=layer_scope,
@@ -502,7 +502,7 @@ class Discriminator(object):
 
         # Final output layer for tags to assign to input image
         with tf.name_scope('tag_confidence_output_layer') as layer_scope:
-            tag_confidence_weights = WeightVariable(shape=[flattened_shape, self.num_tags],
+            tag_confidence_weights = WeightVariable(shape=[4 * 4 * 1024, self.num_tags],
                                                     variable_name='tag_confidence_weights',
                                                     layer_name=layer_scope,
                                                     scope=layer_scope,
