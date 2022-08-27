@@ -56,7 +56,7 @@ class DRAGANLoss(object):
 
         log_loss = tf.math.reduce_sum(tf.math.log(y_pred_real + offset) + \
                                       tf.math.log(1 - y_pred_generated + offset))
-        norm_loss = (1 / batch_size) * log_loss
+        norm_loss = tf.math.reduce_mean(log_loss, axis=0)
 
         return norm_loss
 
@@ -71,7 +71,8 @@ class DRAGANLoss(object):
         """
         # Retrieve the batch_size of the sample
         batch_size = tf.shape(y_pred_generated)[0]
-        log_loss = -(1 / batch_size) * tf.math.reduce_sum(tf.math.log(y_pred_generated + offset))
+#        log_loss = -(1 / batch_size) * tf.math.reduce_sum(tf.math.log(y_pred_generated + offset))
+        log_loss = -tf.math.reduce_mean(tf.math.log(y_pred_generated + offset))
 
         return log_loss
 
@@ -104,8 +105,10 @@ class DRAGANLoss(object):
         # Ensure that the batch size of the real sample is the same as the generated sample
         assert batch_size == tf.shape(gen_component)[0]
 
-        real_component = (1/batch_size) * real_component
-        gen_component = (1/batch_size) * gen_component
+#        real_component = (1/batch_size) * real_component
+#        gen_component = (1/batch_size) * gen_component
+        real_component = tf.math.reduce_mean(real_component, axis=0)
+        gen_component = tf.math.reduce_mean(gen_component, axis=0)
 
         return real_component, gen_component
 
@@ -143,7 +146,7 @@ class DRAGANLoss(object):
         grad_norm = tf.sqrt(tf.reduce_sum(tf.square(grad_sampled_dist), axis=[1, 2, 3]) + offset)
 
         # Calculate gradient penalty term
-        grad_penalty = tf.reduce_mean(tf.square((grad_norm - 1)))
+        grad_penalty = tf.math.reduce_mean(tf.square((grad_norm - 1)))
 
         return grad_penalty
 
