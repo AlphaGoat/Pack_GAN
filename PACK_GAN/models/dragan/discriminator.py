@@ -472,6 +472,7 @@ class Discriminator(object):
             final_act_fm = tf.nn.leaky_relu(final_bias_fm)
 
         # Flatten feature map for read in to final fully-connected layers
+        import pdb; pdb.set_trace()
         flattened_shape = self.image_width * self.image_height * 1024
         flattened_final_fm = tf.reshape(final_act_fm, [-1, flattened_shape])
 
