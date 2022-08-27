@@ -333,7 +333,3 @@ def variable_summaries(var, step):
         tf.summary.scalar('max', tf.reduce_max(var), step=step)
         tf.summary.scalar('min', tf.reduce_min(var), step=step)
         tf.summary.histogram('histogram', var, step=step)
-
-
-
-_
