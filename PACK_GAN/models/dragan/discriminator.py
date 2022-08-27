@@ -147,7 +147,7 @@ class Discriminator(object):
                                                                                   stddev=0.02)
                                        )(step)
 
-            bridge1_fm = tf.nn.conv2d(residual_output, bridge1_kernel, strides=[2, 2, 2, 2], padding='SAME')
+            bridge1_fm = tf.nn.conv2d(residual_output, bridge1_kernel, strides=[1, 2, 2, 1], padding='SAME')
 
             bias_bridge1_fm = tf.nn.bias_add(bridge1_fm, bridge1_bias)
 
@@ -226,7 +226,7 @@ class Discriminator(object):
                                         )(step)
 
             bridge2_fm = tf.nn.conv2d(residual_output, bridge2_kernel,
-                                      strides=[2, 2, 1, 1], padding='SAME')
+                                      strides=[1, 2, 2, 1], padding='SAME')
 
             residual_input = bridge2_output = tf.nn.leaky_relu(bridge2_fm)
 
@@ -307,7 +307,7 @@ class Discriminator(object):
                                         )(step)
 
             bridge3_fm = tf.nn.conv2d(residual_output, bridge3_kernel,
-                                      strides=[2, 2, 1, 1], padding='SAME')
+                                      strides=[1, 2, 2, 1], padding='SAME')
 
             residual_input = act_bridge3_fm = tf.nn.leaky_relu(bridge3_fm)
 
@@ -387,7 +387,7 @@ class Discriminator(object):
                                         )(step)
 
             bridge4_fm = tf.nn.conv2d(residual_output, bridge4_kernel,
-                                      strides=[2, 2, 1, 1], padding='SAME')
+                                      strides=[1, 2, 2, 1], padding='SAME')
 
             act_bridge4_fm = residual_input = tf.nn.leaky_relu(bridge4_fm)
 
@@ -466,7 +466,7 @@ class Discriminator(object):
                                      )(step)
 
             final_fm = tf.nn.conv2d(residual5_output, final_kernel,
-                                    strides=[2, 2, 1, 1], padding='SAME')
+                                    strides=[1, 2, 2, 1], padding='SAME')
 
             final_bias_fm = tf.nn.bias_add(final_fm, final_bias)
 
