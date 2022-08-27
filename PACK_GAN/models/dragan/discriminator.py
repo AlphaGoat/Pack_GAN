@@ -451,7 +451,7 @@ class Discriminator(object):
             final_kernel = WeightVariable(shape=[3, 3, 512, 1024],
                                           variable_name='final_conv_layer_filter',
                                           layer_name=layer_scope,
-                                          scope=block_scope + layer_scope,
+                                          scope=layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
                                           )(step)
@@ -459,7 +459,7 @@ class Discriminator(object):
             final_bias = BiasVariable(shape=(1024,),
                                       variable_name='final_conv_layer_bias',
                                       layer_name=layer_scope,
-                                      scope=block_scope + layer_scope,
+                                      scope=layer_scope,
                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                  stddev=0.02)
                                      )(step)
