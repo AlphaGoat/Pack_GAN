@@ -85,7 +85,7 @@ class Discriminator(object):
                                               scope=layer_scope,
                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
-                                              )
+                                              )(step)
 
                 res_bias1 = BiasVariable(shape=(32,),
                                           variable_name='res1_bias1',
@@ -93,7 +93,7 @@ class Discriminator(object):
                                           scope=layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
-                                          )
+                                          )(step)
 
                 res_fm1 = tf.nn.conv2d(residual_input, res_kernel1, strides=[1, 1, 1, 1], padding='SAME')
 
@@ -108,7 +108,7 @@ class Discriminator(object):
                                               scope=layer_scope,
                                               initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                          stddev=0.02)
-                                              )
+                                              )(step)
 
                 res_bias2 = BiasVariable(shape=(32,),
                                           variable_name='res1_bias2',
@@ -116,7 +116,7 @@ class Discriminator(object):
                                           scope=layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
-                                          )
+                                          )(step)
 
                 res_fm2 = tf.nn.conv2d(act_fm, res_kernel2, strides=[1, 1, 1, 1], padding='SAME')
 
@@ -137,7 +137,7 @@ class Discriminator(object):
                                             scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             bridge1_bias = BiasVariable(shape=(64,),
                                        variable_name='bridge_bias',
@@ -145,7 +145,7 @@ class Discriminator(object):
                                        scope=layer_scope,
                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                   stddev=0.02)
-                                       )
+                                       )(step)
 
             bridge1_fm = tf.nn.conv2d(residual_output, bridge1_kernel, strides=[2, 2, 2, 2], padding='SAME')
 
@@ -163,7 +163,7 @@ class Discriminator(object):
                                                    scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                 resblock2_bias1 = BiasVariable(shape=(64,),
                                                variable_name='resblock2_bias1_pass{}'.format(i),
@@ -171,7 +171,7 @@ class Discriminator(object):
                                                scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
-                                               )
+                                               )(step)
 
                 resblock2_fm1 = tf.nn.conv2d(residual_input, resblock2_kernel1,
                                              strides=[1, 1, 1, 1], padding='SAME')
@@ -187,7 +187,7 @@ class Discriminator(object):
                                                    scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                 resblock2_bias2 = BiasVariable(Shape=(64,),
                                                variable_name='resblock2_bias2_pass{}'.format(i),
@@ -195,7 +195,7 @@ class Discriminator(object):
                                                scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
-                                               )
+                                               )(step)
 
                 resblock2_fm2 = tf.nn.conv2d(act_resblock2_fm1, resblock2_kernel2,
                                              strides=[1, 1, 1, 1], padding='SAME')
@@ -215,7 +215,7 @@ class Discriminator(object):
                                             scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             bridge2_bias = BiasVariable(shape=(128,),
                                         variable_name='bridge2_bias',
@@ -223,7 +223,7 @@ class Discriminator(object):
                                         scope=layer_scope,
                                         initializer=tf.initialzier.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
-                                        )
+                                        )(step)
 
             bridge2_fm = tf.nn.conv2d(residual_output, bridge2_kernel,
                                       strides=[2, 2, 1, 1], padding='SAME')
@@ -242,7 +242,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock3_bias1 = BiasVariable(shape=(128,),
                                                    variable_name='resblock3_bias1_pass{}'.format(i),
@@ -250,7 +250,7 @@ class Discriminator(object):
                                                    scope=block_scope +layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                     resblock3_fm1 = tf.nn.conv2d(residual_input, resblock3_kernel1,
                                                  strides=[1, 1, 1, 1], padding='SAME')
@@ -266,7 +266,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock3_bias2 = BiasVariable(shape=(128,),
                                                    variable_name='resblock3_bias2_pass{}'.format(i),
@@ -274,7 +274,7 @@ class Discriminator(object):
                                                    scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                     resblock3_fm2 = tf.nn.conv2d(act_resblock3_fm1, resblock3_kernel2,
                                                  strides=[1, 1, 1, 1], padding='SAME')
@@ -296,7 +296,7 @@ class Discriminator(object):
                                             scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             bridge3_bias = BiasVariable(shape=(256,),
                                         variable_name='bridge3_bias',
@@ -304,7 +304,7 @@ class Discriminator(object):
                                         scope=layer_scope,
                                         initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
-                                        )
+                                        )(step)
 
             bridge3_fm = tf.nn.conv2d(residual_output, bridge3_kernel,
                                       strides=[2, 2, 1, 1], padding='SAME')
@@ -323,7 +323,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock4_bias1 = BiasVariable(shape=(256,),
                                                    variable_name='resblock4_bias1_pass{}'.format(i),
@@ -331,7 +331,7 @@ class Discriminator(object):
                                                    scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
 
                     resblock4_fm1 = tf.nn.conv2d(residual_input, resblock4_kernel1,
@@ -346,7 +346,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initiializer.TruncatedNormal(mean=0.0,
                                                                                                    stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock4_bias2 = BiasVariable(shape=(256,),
                                                    variable_name='resblock4_bias2_pass{}'.format(i),
@@ -354,7 +354,7 @@ class Discriminator(object):
                                                    scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                     resblock4_fm2 = tf.nn.conv2d(bias_resblock4_fm1, resblock4_kernel2,
                                                  strides=[1, 1, 1, 1], padding='SAME')
@@ -374,10 +374,9 @@ class Discriminator(object):
                                             variable_name='bridge_conv_layer4_kernel',
                                             layer_name=layer_scope,
                                             scope=layer_scope,
-                                            model_scope=self.model_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             bridge4_bias = BiasVariable(shape=(512,),
                                         variable_name='bridge_conv_layer4_bias',
@@ -385,7 +384,7 @@ class Discriminator(object):
                                         scope=layer_scope,
                                         initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                    stddev=0.02)
-                                        )
+                                        )(step)
 
             bridge4_fm = tf.nn.conv2d(residual_output, bridge4_kernel,
                                       strides=[2, 2, 1, 1], padding='SAME')
@@ -403,7 +402,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock5_bias1 = BiasVariable(shape=(512,),
                                                    variable_name='resblock5_bias1_pass{}'.format(i),
@@ -411,7 +410,7 @@ class Discriminator(object):
                                                    scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                     resblock5_fm1 = tf.nn.conv2d(residual_input, resblock5_kernel1,
                                                  strides=[1, 1, 1, 1], padding='SAME')
@@ -427,7 +426,7 @@ class Discriminator(object):
                                                        scope=block_scope + layer_scope,
                                                        initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                   stddev=0.02)
-                                                       )
+                                                       )(step)
 
                     resblock5_bias2 = BiasVariable(shape=(512,),
                                                    variable_name='resblock5_bias2_pass{}'.format(i),
@@ -435,7 +434,7 @@ class Discriminator(object):
                                                    scope=block_scope + layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                               stddev=0.02)
-                                                   )
+                                                   )(step)
 
                     resblock5_fm2 = tf.nn.conv2d(resblock5_act_fm1, resblock5_kernel2,
                                                  strides=[1, 1, 1, 1], padding='SAME')
@@ -456,7 +455,7 @@ class Discriminator(object):
                                           scope=block_scope + layer_scope,
                                           initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                      stddev=0.02)
-                                          )
+                                          )(step)
 
             final_bias = BiasVariable(shape=(1024,),
                                       variable_name='final_conv_layer_bias',
@@ -464,7 +463,7 @@ class Discriminator(object):
                                       scope=block_scope + layer_scope,
                                       initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                  stddev=0.02)
-                                     )
+                                     )(step)
 
             final_fm = tf.nn.conv2d(residual5_output, final_kernel,
                                     strides=[2, 2, 1, 1], padding='SAME')
@@ -485,7 +484,7 @@ class Discriminator(object):
                                                    scope=layer_scope,
                                                    initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                             stddev=0.02)
-                                                 )
+                                                 )(step)
 
             forgery_score_bias = BiasVariable(shape=(1,),
                                             variable_name='forgery_score_bias',
@@ -493,7 +492,7 @@ class Discriminator(object):
                                             scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
-                                            )
+                                            )(step)
 
             unactivated_forgery_score = tf.nn.bias_add(tf.matmul(flattened_final_fm, forgery_score_weights),
                                                     forgery_score_bias)
@@ -509,7 +508,7 @@ class Discriminator(object):
                                                     scope=layer_scope,
                                                     initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                stddev=0.02)
-                                                    )
+                                                    )(step)
 
             tag_confidence_bias = BiasVariable(shape=(self.num_tags,),
                                                variable_name='tag_confidence_bias',
@@ -517,7 +516,7 @@ class Discriminator(object):
                                                scope=layer_scope,
                                                initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                           stddev=0.02)
-                                               )
+                                               )(step)
 
             unactivated_tag_confidences = tf.nn.bias_add(tf.matmul(flattened_final_fm, tag_confidence_weights),
                                                       tag_confidence_bias)

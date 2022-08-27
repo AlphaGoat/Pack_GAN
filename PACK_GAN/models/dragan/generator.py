@@ -178,17 +178,15 @@ class SRResNet(object):
                                                              stddev=0.02)
 
         filter_shape = [dim_x, dim_y, input_channels, num_filters]
-        kernel_name = 'kernel'
         kernel = WeightVariable(shape=filter_shape,
-                                variable_name=kernel_name,
+                                variable_name='kernel',
                                 layer_name=name,
                                 scope=layer_scope,
                                 initializer=weight_initializer,
                                 )(step)
 
-        bias_name = 'bias'
         bias = BiasVariable(shape=(num_filters,),
-                            variable_name=bias_name,
+                            variable_name='bias',
                             layer_name=name,
                             scope=layer_scope,
                             initializer=weight_initializer)(step)
