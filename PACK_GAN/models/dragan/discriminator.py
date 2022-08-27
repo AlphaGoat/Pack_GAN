@@ -70,7 +70,7 @@ class Discriminator(object):
 
             feature_map = tf.nn.conv2d(x, initial_kernel, strides=[1, 2, 2, 1], padding='SAME')
 
-            bias_feature_map = tf.bias_add(feature_map, initial_bias)
+            bias_feature_map = tf.nn.bias_add(feature_map, initial_bias)
 
             residual_input = act_fm = tf.nn.leaky_relu(bias_feature_map)
 
@@ -97,7 +97,7 @@ class Discriminator(object):
 
                 res_fm1 = tf.nn.conv2d(residual_input, res_kernel1, strides=[1, 1, 1, 1], padding='SAME')
 
-                bias_res_fm1 = tf.bias_add(res_fm1, res_bias1)
+                bias_res_fm1 = tf.nn.bias_add(res_fm1, res_bias1)
 
                 act_res1_fm1 = tf.nn.leaky_relu(bias_res_fm1)
 
@@ -120,7 +120,7 @@ class Discriminator(object):
 
                 res_fm2 = tf.nn.conv2d(act_fm, res_kernel2, strides=[1, 1, 1, 1], padding='SAME')
 
-                bias_res_fm2 = tf.bias_add(res_fm2, res_bias2)
+                bias_res_fm2 = tf.nn.bias_add(res_fm2, res_bias2)
 
                 # Elementwise sum with residual input
                 residual_sum = tf.add(bias_res_fm2, residual_input)
@@ -149,7 +149,7 @@ class Discriminator(object):
 
             bridge1_fm = tf.nn.conv2d(residual_output, bridge1_kernel, strides=[2, 2, 2, 2], padding='SAME')
 
-            bias_bridge1_fm = tf.bias_add(bridge1_fm, bridge1_bias)
+            bias_bridge1_fm = tf.nn.bias_add(bridge1_fm, bridge1_bias)
 
             residual_input = bridge1_output = tf.nn.leaky_relu(bias_bridge1_fm)
 
@@ -176,7 +176,7 @@ class Discriminator(object):
                 resblock2_fm1 = tf.nn.conv2d(residual_input, resblock2_kernel1,
                                              strides=[1, 1, 1, 1], padding='SAME')
 
-                bias_resblock2_fm1 = tf.bias_add(resblock2_fm1, resblock2_bias1)
+                bias_resblock2_fm1 = tf.nn.bias_add(resblock2_fm1, resblock2_bias1)
 
                 act_resblock2_fm1 = tf.nn.leaky_relu(bias_resblock2_fm1)
 
@@ -255,7 +255,7 @@ class Discriminator(object):
                     resblock3_fm1 = tf.nn.conv2d(residual_input, resblock3_kernel1,
                                                  strides=[1, 1, 1, 1], padding='SAME')
 
-                    bias_resblock3_fm1 = tf.bias_add(resblock3_fm1, resblock3_bias1)
+                    bias_resblock3_fm1 = tf.nn.bias_add(resblock3_fm1, resblock3_bias1)
 
                     act_resblock3_fm1 = tf.nn.leaky_relu(resblock3_fm1)
 
@@ -279,7 +279,7 @@ class Discriminator(object):
                     resblock3_fm2 = tf.nn.conv2d(act_resblock3_fm1, resblock3_kernel2,
                                                  strides=[1, 1, 1, 1], padding='SAME')
 
-                    bias_resblock3_fm2 = tf.bias_add(resblock3_fm2, resblock3_bias2)
+                    bias_resblock3_fm2 = tf.nn.bias_add(resblock3_fm2, resblock3_bias2)
 
                     # Element-wise summation of input to ResBlock and the final feature map
                     # produced by the second conv layer in the ResBlock
@@ -337,7 +337,7 @@ class Discriminator(object):
                     resblock4_fm1 = tf.nn.conv2d(residual_input, resblock4_kernel1,
                                                  strides=[1, 1, 1, 1], padding='SAME')
 
-                    bias_resblock4_fm1 = tf.bias_add(resblock4_fm1, resblock4_bias1)
+                    bias_resblock4_fm1 = tf.nn.bias_add(resblock4_fm1, resblock4_bias1)
 
                     # 2nd Conv layer
                     resblock4_kernel2 = WeightVariable(shape=[3, 3, 256, 256],
@@ -416,7 +416,7 @@ class Discriminator(object):
                     resblock5_fm1 = tf.nn.conv2d(residual_input, resblock5_kernel1,
                                                  strides=[1, 1, 1, 1], padding='SAME')
 
-                    resblock5_bias_fm1 = tf.bias_add(resblock5_fm1, resblock5_bias1)
+                    resblock5_bias_fm1 = tf.nn.bias_add(resblock5_fm1, resblock5_bias1)
 
                     resblock5_act_fm1 = tf.nn.leaky_relu(resblock5_bias_fm1)
 
@@ -440,7 +440,7 @@ class Discriminator(object):
                     resblock5_fm2 = tf.nn.conv2d(resblock5_act_fm1, resblock5_kernel2,
                                                  strides=[1, 1, 1, 1], padding='SAME')
 
-                    resblock5_bias_fm2 = tf.bias_add(resblock5_fm2, resblock5_bias2)
+                    resblock5_bias_fm2 = tf.nn.bias_add(resblock5_fm2, resblock5_bias2)
 
                     # Elementwise summation with input to residual block
                     resblock5_elementwise_sum = tf.add(resblock5_fm2, residual_input)
@@ -469,7 +469,7 @@ class Discriminator(object):
             final_fm = tf.nn.conv2d(residual5_output, final_kernel,
                                     strides=[2, 2, 1, 1], padding='SAME')
 
-            final_bias_fm = tf.bias_add(final_fm, final_bias)
+            final_bias_fm = tf.nn.bias_add(final_fm, final_bias)
 
             final_act_fm = tf.nn.leaky_relu(final_bias_fm)
 
@@ -495,7 +495,7 @@ class Discriminator(object):
                                                                                        stddev=0.02)
                                             )
 
-            unactivated_forgery_score = tf.bias_add(tf.matmul(flattened_final_fm, forgery_score_weights),
+            unactivated_forgery_score = tf.nn.bias_add(tf.matmul(flattened_final_fm, forgery_score_weights),
                                                     forgery_score_bias)
 
             # output shape: (batch_size,)
@@ -519,7 +519,7 @@ class Discriminator(object):
                                                                                           stddev=0.02)
                                                )
 
-            unactivated_tag_confidences = tf.bias_add(tf.matmul(flattened_final_fm, tag_confidence_weights),
+            unactivated_tag_confidences = tf.nn.bias_add(tf.matmul(flattened_final_fm, tag_confidence_weights),
                                                       tag_confidence_bias)
 
             # output shape: (batch_size, num_tags)
