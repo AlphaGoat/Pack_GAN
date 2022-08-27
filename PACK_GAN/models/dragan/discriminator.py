@@ -343,7 +343,7 @@ class Discriminator(object):
                                                    variable_name='resblock4_kernel2_pass{}'.format(i),
                                                    layer_name=layer_scope,
                                                    scope=layer_scope,
-                                                   initializer=tf.initiializer.TruncatedNormal(mean=0.0,
+                                                   initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                                stddev=0.02)
                                                    )(step)
 
