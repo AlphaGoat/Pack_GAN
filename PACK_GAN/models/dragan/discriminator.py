@@ -189,7 +189,7 @@ class Discriminator(object):
                                                                                               stddev=0.02)
                                                    )(step)
 
-                resblock2_bias2 = BiasVariable(Shape=(64,),
+                resblock2_bias2 = BiasVariable(shape=(64,),
                                                variable_name='resblock2_bias2_pass{}'.format(i),
                                                layer_name=layer_scope,
                                                scope=layer_scope,
