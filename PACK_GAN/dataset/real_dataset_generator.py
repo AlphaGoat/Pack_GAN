@@ -182,8 +182,8 @@ class DatasetGenerator(object):
         else:
             return images, args[1]
 
-    def get_batch(self):
-        #return self.dataset.make_one_shot_iterator()
-        return self.dataset.batch(self.batch_size)
+#    def get_batch(self):
+#        #return self.dataset.make_one_shot_iterator()
+#        return self.dataset.batch(self.batch_size)
 
 
