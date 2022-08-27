@@ -155,11 +155,6 @@ class DatasetGenerator(object):
 
         filename = tf.cast(tf.sparse.to_dense(features_parsed['image/filename']), tf.string)
         image_format = tf.cast(tf.sparse.to_dense(features_parsed['image/format']), tf.string)
-        tf.print("(pjt) filename: ", filename)
-        tf.print("(pjt) image_format: ", image_format)
-        tf.print("(pjt) image width: ", width)
-        tf.print("(pjt) image height: ", height)
-        tf.print("(pjt) channels: ", channels)
         tags = tf.cast(features_parsed['image/tags'], tf.float32)
 
         # Decode imagery from raw bytes
