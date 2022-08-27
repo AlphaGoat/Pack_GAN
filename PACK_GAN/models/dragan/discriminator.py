@@ -291,7 +291,7 @@ class Discriminator(object):
         with tf.name_scope('bridge_conv_layer3') as layer_scope:
             bridge3_kernel = WeightVariable(shape=[3, 3, 128, 256],
                                             variable_name='bridge3_kernel',
-                                            layer_scope=layer_scope,
+                                            layer_name=layer_scope,
                                             scope=layer_scope,
                                             initializer=tf.initializers.TruncatedNormal(mean=0.0,
                                                                                        stddev=0.02)
