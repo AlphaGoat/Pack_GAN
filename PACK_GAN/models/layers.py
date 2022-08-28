@@ -157,6 +157,7 @@ class BatchNormalization(object):
 
         # Calculate the mean and variance over batch dimension of input
         mean, variance = tf.nn.moments(x, axes=[0])
+        import pdb; pdb.set_trace()
 
         return tf.nn.batch_normalization(x,
                                          mean=mean,
