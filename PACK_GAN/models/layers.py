@@ -153,6 +153,7 @@ class BatchNormalization(object):
             param_shape = input_shape[-1]
 
             self.initialize_weights(param_shape)
+            import pdb; pdb.set_trace()
 
         # Calculate the mean and variance over batch dimension of input
         mean, variance = tf.nn.moments(x, axes=[0])
