@@ -91,6 +91,7 @@ class SRResNet(object):
                                   strides=[1, 1, 1, 1],
                                   layer_scope=layer_scope
                                   )
+                import pdb; pdb.set_trace()
          # Shape: (batch_Size, 16, 16, 64)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
