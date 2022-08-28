@@ -166,6 +166,7 @@ class DatasetGenerator(object):
 
         # Normalize the images pixels to zero mean and unit variance
         images = tf.image.per_image_standardization(images)
+        import pdb; pdb.set_trace()
 
         if self.return_filename:
             return images, tags, filename
