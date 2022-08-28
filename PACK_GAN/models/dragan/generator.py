@@ -57,6 +57,7 @@ class SRResNet(object):
         # Weight variable
         # shape: (batch_size, width * height * channels, 64 * 16 * 16)
         input_shape = self.latent_space_vector_dim + self.num_tags
+        import pdb; pdb.set_trace()
         x = self.fully_connected_layer(x,
                                        input_shape=input_shape,
                                        output_shape=(64 * 16 * 16),
