@@ -141,7 +141,7 @@ class BatchNormalization(object):
             shape=(param_shape,),
             variable_name='scale_tensor',
             layer_name="batch_normalization",
-            initializer=tf.zeros,
+            initializer=tf.ones,
             summary_update_freq=self.summary_update_freq,
         )
 
@@ -153,7 +153,6 @@ class BatchNormalization(object):
             param_shape = input_shape[-1]
 
             self.initialize_weights(param_shape)
-            import pdb; pdb.set_trace()
 
         # Calculate the mean and variance over batch dimension of input
         mean, variance = tf.nn.moments(x, axes=[0])
