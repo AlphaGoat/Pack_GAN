@@ -121,15 +121,15 @@ class DRAGANLoss(object):
 
         # Craft probability distribution for sampling real and generated inistance
         # distributions
-        probability_dist = tf.math.log(tf.ones(2 * batch_size)/
-                (2 * tf.cast(batch_size, tf.float32)))
+        probability_dist = tf.math.log(tf.ones((2 * batch_size, ))/
+                (2 * tf.cast(batch_size, tf.float32)))[tf.newaxis, ...]
 
         # sample from this distribution. Use the returned indices to gather elements
         # from the combined real and generated distribution
-        sampled_indices = tf.random.categorical(probability_dist, batch_size)
         import pdb; pdb.set_trace()
+        sampled_indices = tf.random.categorical(probability_dist, batch_size)
 #        sampled_indices = tf.random.uniform(batch_size, minval=0, maxval=(2 * batch_size)-1)
-        sampled_distribution = tf.gather(combined_distribution, sampled_indices)
+        sampled_distribution = tf.gather(combined_distribution, sampled_indices)[0, ...]
 
         # Gather discriminator outputs for the sampled input distribution
         sampled_outputs = tf.gather(combined_outputs, sampled_indices)

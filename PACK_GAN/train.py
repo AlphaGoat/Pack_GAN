@@ -217,6 +217,7 @@ def main(flags):
                 chance = tf.random.uniform([1], minval=0.0, maxval=1.0, dtype=tf.float32)
 
                 # Calculate the losses for the generator and the discriminator
+                import pdb; pdb.set_trace()
                 discriminator_loss, generator_loss = dragan_loss(real_images,
                                                                  gen_images,
                                                                  y_real,
