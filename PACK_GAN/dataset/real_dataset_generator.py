@@ -163,10 +163,10 @@ class DatasetGenerator(object):
 #        tf.print("(pjt) image shape (flattened): ", tf.shape(images))
         images = tf.io.decode_jpeg(image_raw, channels=3)
         images = tf.reshape(images, [height, width, channels])
+        images = tf.cast(images, tf.float32)
 
         # Normalize the images pixels to zero mean and unit variance
         images = tf.image.per_image_standardization(images)
-        import pdb; pdb.set_trace()
 
         if self.return_filename:
             return images, tags, filename
