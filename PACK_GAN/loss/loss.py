@@ -127,7 +127,7 @@ class DRAGANLoss(object):
         # sample from this distribution. Use the returned indices to gather elements
         # from the combined real and generated distribution
 #        sampled_indices = tf.random.categorical(probability_dist, batch_size)
-        sampled_indices = tf.random.uniform(batch_size, min_val=0, max_val=(2 * batch_size)-1)
+        sampled_indices = tf.random.uniform(batch_size, max_val=(2 * batch_size)-1)
         sampled_distribution = tf.gather(combined_distribution, sampled_indices)
 
         # Gather discriminator outputs for the sampled input distribution
