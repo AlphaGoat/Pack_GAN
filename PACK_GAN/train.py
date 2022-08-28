@@ -122,6 +122,7 @@ def main(flags):
                          latent_space_vector_dim,
                          flags.num_tags,
                          variable_summary_update_freq=parameter_summary_update_freq,
+                         batch_size=flags.train_batch_size,
                          )
 
     discriminator = Discriminator(image_width,
@@ -195,7 +196,6 @@ def main(flags):
 #                train_batch = train_iterator.get_next()
                 train_batch = next(iter(train_data_generator.dataset))
                 real_images, real_tags = train_batch[0], train_batch[1]
-                import pdb; pdb.set_trace()
 
                 # Retrieve seed for Generator
                 latent_space_noise, gen_tags = next(iter(noise_generator.dataset))

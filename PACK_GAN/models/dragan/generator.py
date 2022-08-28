@@ -22,6 +22,7 @@ class SRResNet(object):
                  image_channels,
                  latent_space_vector_dim,
                  num_tags,
+                 batch_size=1,
                  variable_summary_update_freq=10,
                  model_scope="SRResNet_Generator"):
 
@@ -33,6 +34,7 @@ class SRResNet(object):
         # Provide dims of input
         self.latent_space_vector_dim = latent_space_vector_dim
         self.num_tags = num_tags
+        self.batch_size = batch_size
 
         # variable scope to be used for the model
         self.model_scope = model_scope
@@ -57,7 +59,6 @@ class SRResNet(object):
         # Weight variable
         # shape: (batch_size, width * height * channels, 64 * 16 * 16)
         input_shape = self.latent_space_vector_dim + self.num_tags
-        import pdb; pdb.set_trace()
         x = self.fully_connected_layer(x,
                                        input_shape=input_shape,
                                        output_shape=(64 * 16 * 16),
@@ -65,11 +66,12 @@ class SRResNet(object):
                                        step=step)
 
         # Batch Normalization
-        batch_norm_out_fc1 = BatchNormalization(
-                                        name='BatchNorm_fc1',
-#                                        layer_scope=layer_scope,
-                                        summary_update_freq=self.variable_summary_update_freq,
-                                        )(x, step)
+        if self.batch_size > 1:
+            batch_norm_out_fc1 = BatchNormalization(
+                                            name='BatchNorm_fc1',
+    #                                        layer_scope=layer_scope,
+                                            summary_update_freq=self.variable_summary_update_freq,
+                                            )(x, step)
 
         # Activation of output
         act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
@@ -92,7 +94,6 @@ class SRResNet(object):
                                   strides=[1, 1, 1, 1],
                                   layer_scope=layer_scope
                                   )
-                import pdb; pdb.set_trace()
          # Shape: (batch_Size, 16, 16, 64)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
@@ -109,7 +110,7 @@ class SRResNet(object):
             with tf.name_scope('upsampling_subpixel_convolution{}'.format(i)) as layer_scope:
 
                 # Initializer filter and bias for upsampling convolution
-                x = self.pixel_shuffle_block(x, layer_scope=layer_scope)
+                x = self.pixel_shuffle_block(x, layer_scope=layer_scope, step=step)
 
         # Shape of last intermediate feature map output by the upsampling sub-pixel
         # convolution layers
@@ -128,7 +129,6 @@ class SRResNet(object):
             # Shape: (batch_size, 128, 128, 3)
             output = tf.nn.sigmoid(x)
 
-        import pdb; pdb.set_trace()
         return output
 
     def fully_connected_layer(self,
@@ -217,24 +217,24 @@ class SRResNet(object):
         x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_1", strides=strides, layer_scope=layer_scope,
                         step=step)
-        x = tf.nn.batch_normalization(x,
-                                      mean=0.0,
-                                      variance=1.0,
-                                      offset=None,
-                                      scale=None,
-                                      variance_epsilon=0.001)
+        if self.batch_size > 1:
+            x = BatchNormalization(
+                name=layer_scope + "_batch_norm1_1",
+                summary_update_freq=self.variable_summary_update_freq,
+            )(x, step)
+
         x = tf.nn.relu(x)
 
         # Second Convolution
         x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_2", strides=strides, layer_scope=layer_scope,
                         step=step)
-        x = tf.nn.batch_normalization(x,
-                                      mean=0.0,
-                                      variance=1.0,
-                                      offset=None,
-                                      scale=None,
-                                      variance_epsilon=0.001)
+
+        if self.batch_size > 1:
+            x = BatchNormalization(
+                name=layer_scope + "_batch_norm1_2",
+                summary_update_freq=self.variable_summary_update_freq,
+            )(x, step)
         residual_sum = tf.add(res_input, x)
         output = tf.nn.relu(residual_sum)
 
@@ -243,7 +243,7 @@ class SRResNet(object):
     def pixel_shuffle_block(self,
                             x,
                             layer_scope=None,
-                            ):
+                            step=0):
         x = self.conv2d(x,
                         filter_dims=[3, 3],
                         num_filters=256,
@@ -252,12 +252,12 @@ class SRResNet(object):
                         strides=[1, 1, 1, 1],
                         layer_scope=layer_scope)
         x = self.pixel_shuffle_x2_layer(x)
-        x = tf.nn.batch_normalization(x,
-                                      mean=0.0,
-                                      variance=1.0,
-                                      offset=None,
-                                      scale=None,
-                                      variance_epsilon=0.001)
+        if self.batch_size > 1:
+            x = BatchNormalization(
+                name=layer_scope + "batch_norm1_1",
+                summary_update_freq=self.variable_summary_update_freq,
+            )(x, step=step)
+
         output = tf.nn.relu(x)
 
         return output
