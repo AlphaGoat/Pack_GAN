@@ -126,6 +126,7 @@ class DRAGANLoss(object):
 
         # sample from this distribution. Use the returned indices to gather elements
         # from the combined real and generated distribution
+        import pdb; pdb.set_Trace()
         sampled_indices = tf.random.categorical(probability_dist, batch_size)
         sampled_distribution = tf.gather(combined_distribution, sampled_indices)
 
