@@ -180,8 +180,7 @@ class SRResNet(object):
         weight_initializer = tf.initializers.TruncatedNormal(mean=0.02,
                                                              stddev=0.02)
 
-        filter_shape = [dim_x, dim_y, input_channels, num_filters]
-        kernel = WeightVariable(shape=filter_shape,
+        kernel = WeightVariable(shape=[dim_x, dim_y, input_channels, num_filters],
                                 variable_name='kernel',
                                 layer_name=name,
                                 scope=layer_scope,

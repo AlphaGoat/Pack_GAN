@@ -145,6 +145,17 @@ class BatchNormalization(object):
             summary_update_freq=self.summary_update_freq,
         )
 
+    def _batch_norm(self, x, step):
+        mean, variance = tf.nn.moments(x, axes=[0])
+
+        return tf.nn.batch_normalization(x,
+                                         mean=mean,
+                                         variance=variance,
+                                         offset=self.t_beta(step),
+                                         scale=self.t_gamma(step),
+                                         variance_epsilon=0.001
+                                         )
+
     def __call__(self, x, step=0):
 
         # If first step in training loop, initialize weights
@@ -154,17 +165,15 @@ class BatchNormalization(object):
 
             self.initialize_weights(param_shape)
 
-        # Calculate the mean and variance over batch dimension of input
-        mean, variance = tf.nn.moments(x, axes=[0])
-        import pdb; pdb.set_trace()
+        # if the batch size is less than 1, skip batch normalization
+        batch_size = tf.shape(x)[0]
 
-        return tf.nn.batch_normalization(x,
-                                         mean=mean,
-                                         variance=variance,
-                                         offset=self.t_beta(step),
-                                         scale=self.t_gamma(step),
-                                         variance_epsilon=0.001
-                                         )
+        return tf.cond(
+            batch_size > 1, 
+            lambda x: self._batch_norm(x, step=step),
+            lambda x: x
+        )
+
 
 class WeightVariable(tf.Module):
     """
