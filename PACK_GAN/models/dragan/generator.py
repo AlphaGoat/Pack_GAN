@@ -74,6 +74,7 @@ class SRResNet(object):
 
         # Activation of output
         act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
+        import pdb; pdb.set_trace()
 
         # Reshape output of dense layer to feed into resblocks
         # NOTE: the output of this first dense layer will be saved and used
@@ -93,6 +94,7 @@ class SRResNet(object):
                                   strides=[1, 1, 1, 1],
                                   layer_scope=layer_scope
                                   )
+                import pdb; pdb.set_trace()
          # Shape: (batch_Size, 16, 16, 64)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
