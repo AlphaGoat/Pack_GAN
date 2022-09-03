@@ -228,9 +228,12 @@ def main(flags):
                                                                  gen_tags)
 
                 # Perform optimization of both model's parameters
-                discriminator_optimizer.minimize(discriminator_loss)
+                import pdb; pdb.set_trace()
+                discriminator_optimizer.minimize(discriminator_loss, 
+                        discriminator.trainable_weights)
 
-                generator_optimizer.minimize(generator_loss)
+                generator_optimizer.minimize(generator_loss,
+                        generator.trainable_weights)
 
                 # Add to running losses for both models
                 running_discriminator_loss += discriminator_loss
