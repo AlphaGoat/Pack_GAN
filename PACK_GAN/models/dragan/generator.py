@@ -212,18 +212,15 @@ class SRResNet(object):
 
         # Store input as residual
         res_input = x
-        import pdb; pdb.set_trace()
 
         # First Convolution
         x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_1", strides=strides, layer_scope=layer_scope,
                         step=step)
-        import pdb; pdb.set_trace()
         x = BatchNormalization(
             name=layer_scope + "_batch_norm1_1",
             summary_update_freq=self.variable_summary_update_freq,
         )(x, step)
-        import pdb; pdb.set_trace()
 
         x = tf.nn.relu(x)
         import pdb; pdb.set_trace()
