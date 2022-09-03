@@ -127,7 +127,7 @@ class SRResNet(object):
 
             # Shape: (batch_size, 128, 128, 3)
             output = tf.nn.sigmoid(x)
-
+        import pdb; pdb.set_trace()
         return output
 
     def fully_connected_layer(self,
