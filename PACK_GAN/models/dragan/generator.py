@@ -178,7 +178,7 @@ class SRResNet(object):
         if len(filter_dims) == 2: dim_x, dim_y = filter_dims
         else: dim_x = dim_y = filter_dims
 
-        weight_initializer = tf.initializers.TruncatedNormal(mean=0.02,
+        weight_initializer = tf.initializers.TruncatedNormal(mean=0.0,
                                                              stddev=0.02)
 
         kernel = WeightVariable(shape=[dim_x, dim_y, input_channels, num_filters],
@@ -195,11 +195,11 @@ class SRResNet(object):
                             initializer=weight_initializer)(step)
 
         fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
-        if name == "conv1_2":
-            import pdb; pdb.set_trace()
+#        if name == "conv1_2":
+        import pdb; pdb.set_trace()
         fm = tf.nn.bias_add(fm, bias)
-        if name == "conv1_2":
-            import pdb; pdb.set_trace()
+#        if name == "conv1_2":
+        import pdb; pdb.set_trace()
 
         return fm
 
