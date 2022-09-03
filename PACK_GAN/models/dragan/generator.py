@@ -195,11 +195,11 @@ class SRResNet(object):
                             initializer=weight_initializer)(step)
 
         fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
-#        if name == "conv1_2":
-        import pdb; pdb.set_trace()
+        if name == "conv1_2":
+            import pdb; pdb.set_trace()
         fm = tf.nn.bias_add(fm, bias)
-#        if name == "conv1_2":
-        import pdb; pdb.set_trace()
+        if name == "conv1_2":
+            import pdb; pdb.set_trace()
 
         return fm
 
@@ -227,23 +227,18 @@ class SRResNet(object):
         )(x, step)
 
         x = tf.nn.relu(x)
-        import pdb; pdb.set_trace()
 
         # Second Convolution
         x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_2", strides=strides, layer_scope=layer_scope,
                         step=step)
-        import pdb; pdb.set_trace()
 
         x = BatchNormalization(
             name=layer_scope + "_batch_norm1_2",
             summary_update_freq=self.variable_summary_update_freq,
         )(x, step)
-        import pdb; pdb.set_trace()
         residual_sum = tf.add(res_input, x)
-        import pdb; pdb.set_trace()
         output = tf.nn.relu(residual_sum)
-        import pdb; pdb.set_trace()
 
         return output
 
