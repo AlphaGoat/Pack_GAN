@@ -168,10 +168,10 @@ class DRAGANLoss(object):
 
 
         # calculate gradient penalty term
-        grad_penalty = self.gradient_penalty(x_real, gen_images, y_real, y_gen)
+#        grad_penalty = self.gradient_penalty(x_real, gen_images, y_real, y_gen)
 
         # calculate full loss terms for the generator and discriminator
-        discriminator_loss = cls_discrim_loss + (self.adv_lambda * adv_discrim_loss) + (self.gp_lambda * grad_penalty)
+        discriminator_loss = cls_discrim_loss + (self.adv_lambda * adv_discrim_loss) #+ (self.gp_lambda * grad_penalty)
         generator_loss = cls_gen_loss + (self.adv_lambda * adv_gen_loss)
 
         return discriminator_loss, generator_loss
