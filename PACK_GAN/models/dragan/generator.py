@@ -66,12 +66,11 @@ class SRResNet(object):
                                        step=step)
 
         # Batch Normalization
-        if self.batch_size > 1:
-            batch_norm_out_fc1 = BatchNormalization(
-                                            name='BatchNorm_fc1',
-    #                                        layer_scope=layer_scope,
-                                            summary_update_freq=self.variable_summary_update_freq,
-                                            )(x, step)
+        batch_norm_out_fc1 = BatchNormalization(
+                                        name='BatchNorm_fc1',
+#                                        layer_scope=layer_scope,
+                                        summary_update_freq=self.variable_summary_update_freq,
+                                        )(x, step)
 
         # Activation of output
         act_out_fc1 = tf.nn.relu(batch_norm_out_fc1)
@@ -216,11 +215,10 @@ class SRResNet(object):
         x = self.conv2d(x, filter_dims, num_filters, input_channels,
                         name="conv1_1", strides=strides, layer_scope=layer_scope,
                         step=step)
-        if self.batch_size > 1:
-            x = BatchNormalization(
-                name=layer_scope + "_batch_norm1_1",
-                summary_update_freq=self.variable_summary_update_freq,
-            )(x, step)
+        x = BatchNormalization(
+            name=layer_scope + "_batch_norm1_1",
+            summary_update_freq=self.variable_summary_update_freq,
+        )(x, step)
 
         x = tf.nn.relu(x)
 
@@ -229,11 +227,10 @@ class SRResNet(object):
                         name="conv1_2", strides=strides, layer_scope=layer_scope,
                         step=step)
 
-        if self.batch_size > 1:
-            x = BatchNormalization(
-                name=layer_scope + "_batch_norm1_2",
-                summary_update_freq=self.variable_summary_update_freq,
-            )(x, step)
+        x = BatchNormalization(
+            name=layer_scope + "_batch_norm1_2",
+            summary_update_freq=self.variable_summary_update_freq,
+        )(x, step)
         residual_sum = tf.add(res_input, x)
         output = tf.nn.relu(residual_sum)
 
@@ -251,11 +248,10 @@ class SRResNet(object):
                         strides=[1, 1, 1, 1],
                         layer_scope=layer_scope)
         x = self.pixel_shuffle_x2_layer(x)
-        if self.batch_size > 1:
-            x = BatchNormalization(
-                name=layer_scope + "batch_norm1_1",
-                summary_update_freq=self.variable_summary_update_freq,
-            )(x, step=step)
+        x = BatchNormalization(
+            name=layer_scope + "batch_norm1_1",
+            summary_update_freq=self.variable_summary_update_freq,
+        )(x, step=step)
 
         output = tf.nn.relu(x)
 
