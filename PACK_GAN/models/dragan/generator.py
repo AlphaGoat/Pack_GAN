@@ -193,11 +193,13 @@ class SRResNet(object):
                             layer_name=name,
                             scope=layer_scope,
                             initializer=weight_initializer)(step)
-        if name == "conv1_2":
-            import pdb; pdb.set_trace()
 
         fm = tf.nn.conv2d(x, kernel, strides=strides, padding='SAME')
+        if name == "conv1_2":
+            import pdb; pdb.set_trace()
         fm = tf.nn.bias_add(fm, bias)
+        if name == "conv1_2":
+            import pdb; pdb.set_trace()
 
         return fm
 
