@@ -170,8 +170,8 @@ class BatchNormalization(object):
 
         return tf.cond(
             batch_size > 1, 
-            lambda x: self._batch_norm(x, step=step),
-            lambda x: x
+            lambda: self._batch_norm(x, step=step),
+            lambda: x
         )
 
 
