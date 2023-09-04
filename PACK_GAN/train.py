@@ -19,6 +19,13 @@ from PACK_GAN.dataset.noise_generator import NoiseGenerator
 from PACK_GAN.utils.tensorboard_plotting import plot_images
 
 
+def get_vars_in_scope(scope=""):
+    """
+    Get all trainable variables in a given scope
+    """
+    return [x for x in tf.compat.v1.tranable_variables() if scope in x.name]
+
+
 def main(flags):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = flags.gpu_list
@@ -227,13 +234,16 @@ def main(flags):
                                                                  real_tags,
                                                                  gen_tags)
 
+                # Get the trainable variables for the Generator and the Discriminator
+                generator_variables = get_vars_in_scope("SRResNet_Generator")
+                discriminator_variables = get_vars_in_scope("SRResNet_Discriminator")
+
                 # Perform optimization of both model's parameters
-                import pdb; pdb.set_trace()
                 discriminator_optimizer.minimize(discriminator_loss, 
-                        discriminator.trainable_weights)
+                                                 discriminator_variables)
 
                 generator_optimizer.minimize(generator_loss,
-                        generator.trainable_weights)
+                                             generator_variables)
 
                 # Add to running losses for both models
                 running_discriminator_loss += discriminator_loss

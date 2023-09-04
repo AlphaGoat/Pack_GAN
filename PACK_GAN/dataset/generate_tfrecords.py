@@ -159,8 +159,6 @@ def load_image(file_path):
     # As cv2 loads images as BGR, convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = image.astype(np.float32)
-    print("image shape: ", image.shape)
-    print("image dtype: ", image.dtype)
     return image
 
 def convert_to_tfrecords(data_dict, flags):

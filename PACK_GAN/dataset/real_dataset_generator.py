@@ -139,7 +139,7 @@ class DatasetGenerator(object):
             'image/width': tf.io.FixedLenFeature([], dtype=tf.int64),
             'image/height': tf.io.FixedLenFeature([], dtype=tf.int64),
             'image/channels': tf.io.FixedLenFeature([], dtype=tf.int64),
-            'image/tags': tf.io.FixedLenFeature([self.num_tags], dtype=tf.int64),
+#            'image/tags': tf.io.FixedLenFeature([self.num_tags], dtype=tf.int64),
             'image/filename': tf.io.VarLenFeature(dtype=tf.string),
             'image/format': tf.io.VarLenFeature(dtype=tf.string),
         }
@@ -155,7 +155,8 @@ class DatasetGenerator(object):
 
         filename = tf.cast(tf.sparse.to_dense(features_parsed['image/filename']), tf.string)
         image_format = tf.cast(tf.sparse.to_dense(features_parsed['image/format']), tf.string)
-        tags = tf.cast(features_parsed['image/tags'], tf.float32)
+#        tags = tf.cast(features_parsed['image/tags'], tf.float32)
+        tags = tf.cast([1., 0., 1., 0.], tf.float32)
 
         # Decode imagery from raw bytes
 #        images = tf.sparse.to_dense(features_parsed['image/raw'], default_value="")
