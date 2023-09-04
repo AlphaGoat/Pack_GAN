@@ -81,7 +81,6 @@ class SRResNet(object):
         #       input
         # Shape: (batch_size, 16, 16, 64)
         x = residual_input = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
-        import pdb; pdb.set_trace()
 
         # Initialize 16 Residual blocks
         for i in range(1, 17):
@@ -95,7 +94,6 @@ class SRResNet(object):
                                   layer_scope=layer_scope
                                   )
          # Shape: (batch_Size, 16, 16, 64)
-        import pdb; pdb.set_trace()
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
                                       variance=1.0,
@@ -104,7 +102,6 @@ class SRResNet(object):
                                       variance_epsilon=0.001)
         x = tf.nn.relu(x)
         x = tf.add(x, residual_input)
-        import pdb; pdb.set_trace()
 
         # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
         #           x and y dimension and randomly shuffles pixels in those dimensions
@@ -113,7 +110,6 @@ class SRResNet(object):
 
                 # Initializer filter and bias for upsampling convolution
                 x = self.pixel_shuffle_block(x, layer_scope=layer_scope, step=step)
-        import pdb; pdb.set_trace()
 
         # Shape of last intermediate feature map output by the upsampling sub-pixel
         # convolution layers
@@ -131,7 +127,6 @@ class SRResNet(object):
 
             # Shape: (batch_size, 128, 128, 3)
             output = tf.nn.sigmoid(x)
-        import pdb; pdb.set_trace()
         return output
 
     def fully_connected_layer(self,
