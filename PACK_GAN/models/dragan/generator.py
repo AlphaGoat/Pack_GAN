@@ -93,6 +93,7 @@ class SRResNet(object):
                                   strides=[1, 1, 1, 1],
                                   layer_scope=layer_scope
                                   )
+
          # Shape: (batch_Size, 16, 16, 64)
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
@@ -249,7 +250,7 @@ class SRResNet(object):
                         layer_scope=layer_scope)
         x = self.pixel_shuffle_x2_layer(x)
         x = BatchNormalization(
-            name=layer_scope + "batch_norm1_1",
+            name=layer_scope + "_batch_norm1_1",
             summary_update_freq=self.variable_summary_update_freq,
         )(x, step=step)
 
