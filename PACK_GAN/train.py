@@ -23,7 +23,7 @@ def get_vars_in_scope(scope=""):
     """
     Get all trainable variables in a given scope
     """
-    return [x for x in tf.compat.v1.tranable_variables() if scope in x.name]
+    return [x for x in tf.compat.v1.trainable_variables() if scope in x.name]
 
 
 def main(flags):

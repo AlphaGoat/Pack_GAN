@@ -81,6 +81,7 @@ class SRResNet(object):
         #       input
         # Shape: (batch_size, 16, 16, 64)
         x = residual_input = tf.reshape(act_out_fc1, [-1, 16, 16, 64])
+        import pdb; pdb.set_trace()
 
         # Initialize 16 Residual blocks
         for i in range(1, 17):
@@ -93,8 +94,8 @@ class SRResNet(object):
                                   strides=[1, 1, 1, 1],
                                   layer_scope=layer_scope
                                   )
-
          # Shape: (batch_Size, 16, 16, 64)
+        import pdb; pdb.set_trace()
         x = tf.nn.batch_normalization(x,
                                       mean=0.0,
                                       variance=1.0,
@@ -103,6 +104,7 @@ class SRResNet(object):
                                       variance_epsilon=0.001)
         x = tf.nn.relu(x)
         x = tf.add(x, residual_input)
+        import pdb; pdb.set_trace()
 
         # Upsampling sub-pixel convolution: scales the input tensor by 2 in both the
         #           x and y dimension and randomly shuffles pixels in those dimensions
@@ -111,6 +113,7 @@ class SRResNet(object):
 
                 # Initializer filter and bias for upsampling convolution
                 x = self.pixel_shuffle_block(x, layer_scope=layer_scope, step=step)
+        import pdb; pdb.set_trace()
 
         # Shape of last intermediate feature map output by the upsampling sub-pixel
         # convolution layers
@@ -250,7 +253,7 @@ class SRResNet(object):
                         layer_scope=layer_scope)
         x = self.pixel_shuffle_x2_layer(x)
         x = BatchNormalization(
-            name=layer_scope + "_batch_norm1_1",
+            name=layer_scope + "batch_norm1_1",
             summary_update_freq=self.variable_summary_update_freq,
         )(x, step=step)
 
@@ -279,12 +282,12 @@ class SRResNet(object):
         fm_y = tf.shape(input_fm)[2]
 
         # Reshape tensor to combine 2x channels along x-dim
-        pix_shuffle_xdim = tf.reshape(input_fm, [1, 2 * fm_x, fm_y, -1])
+        pix_shuffle_xdim = tf.reshape(input_fm, [self.batch_size, 2 * fm_x, fm_y, -1])
 
         # Perform transpose and reshape tensor to combine the 2x remaining channels along
         # the y-dim
         pix_shuffle_x2_output = tf.reshape(tf.transpose(pix_shuffle_xdim, perm=[0, 2, 1, 3]),
-                                           [1, 2 * fm_x, 2 * fm_y, -1])
+                                           [self.batch_size, 2 * fm_x, 2 * fm_y, -1])
 
         return pix_shuffle_x2_output
 
