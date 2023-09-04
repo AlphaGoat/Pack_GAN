@@ -210,40 +210,51 @@ def main(flags):
                 # concatenate latent space noise and tag vector to feed into generator
                 gen_input = tf.concat([latent_space_noise, gen_tags], axis=1)
 
-                # Now generate fake images
-                gen_images = generator(gen_input, step=step)
+                with tf.GradientTape(persistent=True) as tape:
+                    # Now generate fake images
+                    gen_images = generator(gen_input, step=step)
 
-                # Feed real data through discriminator and retrieve output
-                # forgery scores as well as label confidences
-                y_real, tag_scores_real = discriminator(real_images, step=step)
+                    # Feed real data through discriminator and retrieve output
+                    # forgery scores as well as label confidences
+                    y_real, tag_scores_real = discriminator(real_images, step=step)
 
-                # Do the same with generated images
-                y_gen, tag_scores_gen = discriminator(gen_images, step=step)
+                    # Do the same with generated images
+                    y_gen, tag_scores_gen = discriminator(gen_images, step=step)
 
-                # Implement chance of switching labels for real and generated
-                # images (noisy labels)
-                chance = tf.random.uniform([1], minval=0.0, maxval=1.0, dtype=tf.float32)
+                    # Implement chance of switching labels for real and generated
+                    # images (noisy labels)
+                    chance = tf.random.uniform([1], minval=0.0, maxval=1.0, dtype=tf.float32)
 
-                # Calculate the losses for the generator and the discriminator
-                discriminator_loss, generator_loss = dragan_loss(real_images,
-                                                                 gen_images,
-                                                                 y_real,
-                                                                 y_gen,
-                                                                 tag_scores_real,
-                                                                 tag_scores_gen,
-                                                                 real_tags,
+                    # Calculate the losses for the generator and the discriminator
+                    discriminator_loss, generator_loss = dragan_loss(real_images,
+                                                                     gen_images,
+                                                                     y_real,
+                                                                     y_gen,
+                                                                     tag_scores_real,
+                                                                     tag_scores_gen,
+                                                                     real_tags,
                                                                  gen_tags)
 
                 # Get the trainable variables for the Generator and the Discriminator
                 generator_variables = get_vars_in_scope("SRResNet_Generator")
                 discriminator_variables = get_vars_in_scope("SRResNet_Discriminator")
 
-                # Perform optimization of both model's parameters
-                discriminator_optimizer.minimize(discriminator_loss, 
-                                                 discriminator_variables)
+                d_grads = tape.gradient(discriminator_loss, discriminator_variables)
+                g_grads = tape.gradient(generator_loss, generator_variables)
 
-                generator_optimizer.minimize(generator_loss,
-                                             generator_variables)
+                discriminator_optimizer.apply_gradients(
+                    zip(d_grads, discriminator_variables)
+                )
+                generator_optimizer.apply_gradients(
+                    zip(g_grads, generator_variables)
+                )
+
+#                # Perform optimization of both model's parameters
+#                discriminator_optimizer.minimize(discriminator_loss, 
+#                                                 discriminator_variables)
+#
+#                generator_optimizer.minimize(generator_loss,
+#                                             generator_variables)
 
                 # Add to running losses for both models
                 running_discriminator_loss += discriminator_loss
